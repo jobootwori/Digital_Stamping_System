@@ -13,12 +13,12 @@ class CustomUser(AbstractUser):
         return self.username
 
 class Document(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(AbstractUser, on_delete=models.CASCADE)
     file = models.FileField(upload_to='documents/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
 class Stamp(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(AbstractUser, on_delete=models.CASCADE)
     shape = models.CharField(max_length=50, choices=[('circle', 'Circle'), ('rectangle', 'Rectangle')])
     color = models.CharField(max_length=7, default='#000000')  # Hex color code
     text = models.CharField(max_length=200, blank=True)
