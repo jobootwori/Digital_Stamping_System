@@ -16,7 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import RegisterView, UserDetailView, DocumentUploadView, StampListView
+from stamps.views import RegisterView, UserDetailView, DocumentUploadView, StampListView
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,4 +25,5 @@ urlpatterns = [
     path('me/', UserDetailView.as_view(), name='user-detail'),
     path('upload/', DocumentUploadView.as_view(), name='document-upload'),
     path('stamps/', StampListView.as_view(), name='stamp-list'),
+    path('', RedirectView.as_view(url='register/')),  # Redirect root to 'register/'
 ]
