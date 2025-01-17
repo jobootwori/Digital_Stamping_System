@@ -1,5 +1,6 @@
 'use client';
 
+import axios from 'axios';
 import { z as zod } from 'zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -27,18 +28,24 @@ import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
-export const SignUpSchema = zod.object({
-  firstName: zod.string().min(1, { message: 'First name is required!' }),
-  lastName: zod.string().min(1, { message: 'Last name is required!' }),
-  email: zod
-    .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
-  password: zod
-    .string()
-    .min(1, { message: 'Password is required!' })
-    .min(6, { message: 'Password must be at least 6 characters!' }),
-});
+export const SignUpSchema = zod
+  .object({
+    firstName: zod.string().min(1, { message: 'First name is required!' }),
+    lastName: zod.string().min(1, { message: 'Last name is required!' }),
+    email: zod
+      .string()
+      .min(1, { message: 'Email is required!' })
+      .email({ message: 'Email must be a valid email address!' }),
+    password: zod
+      .string()
+      .min(1, { message: 'Password is required!' })
+      .min(8, { message: 'Password must be at least 8 characters!' }),
+    confirmPassword: zod.string().min(1, { message: 'Confirm password is required!' }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ['confirmPassword'],
+    message: "Passwords don't match!",
+  });
 
 // ----------------------------------------------------------------------
 
@@ -49,13 +56,16 @@ export function JwtSignUpView() {
 
   const password = useBoolean();
 
+  const confirmPassword = useBoolean();
+
   const [errorMsg, setErrorMsg] = useState('');
 
   const defaultValues = {
-    firstName: 'Hello',
-    lastName: 'Friend',
-    email: 'hello@gmail.com',
-    password: '@demo1',
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   };
 
   const methods = useForm({
@@ -70,19 +80,29 @@ export function JwtSignUpView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await signUp({
+      const response = await axios.post('/api/register/',({
         email: data.email,
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
-      });
+      }));
       await checkUserSession?.();
 
       router.refresh();
-    } catch (error) {
-      console.error(error);
-      setErrorMsg(error instanceof Error ? error.message : error);
     }
+    catch (error) {
+    console.error(error);
+    if (error.response && error.response.data) {
+      // If the error is from the API and contains validation errors
+      const errorMessages = error.response.data;
+      const emailError = errorMessages.email ? errorMessages.email[0] : '';
+      const passwordError = errorMessages.password ? errorMessages.password[0] : '';
+      
+      setErrorMsg(emailError || passwordError || 'An error occurred.');
+    } else {
+      setErrorMsg('An error occurred.');
+    }
+  }
   });
 
   const renderHead = (
@@ -104,16 +124,16 @@ export function JwtSignUpView() {
   const renderForm = (
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <Field.Text name="firstName" label="First name" InputLabelProps={{ shrink: true }} />
-        <Field.Text name="lastName" label="Last name" InputLabelProps={{ shrink: true }} />
+        <Field.Text name="firstName" label="First name" placeholder="Odoyo" InputLabelProps={{ shrink: true }} />
+        <Field.Text name="lastName" label="Last name" placeholder="Obambla" InputLabelProps={{ shrink: true }} />
       </Stack>
 
-      <Field.Text name="email" label="Email address" InputLabelProps={{ shrink: true }} />
+      <Field.Text name="email" label="Email address" placeholder="odoyoobambla@digistamp.com" InputLabelProps={{ shrink: true }} />
 
       <Field.Text
         name="password"
         label="Password"
-        placeholder="6+ characters"
+        placeholder="8+ characters"
         type={password.value ? 'text' : 'password'}
         InputLabelProps={{ shrink: true }}
         InputProps={{
@@ -121,6 +141,25 @@ export function JwtSignUpView() {
             <InputAdornment position="end">
               <IconButton onClick={password.onToggle} edge="end">
                 <Iconify icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+      />
+
+      <Field.Text
+        name="confirmPassword"
+        label="Confirm Password"
+        placeholder="Re-enter your password"
+        type={confirmPassword.value ? 'text' : 'password'}
+        InputLabelProps={{ shrink: true }}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton onClick={confirmPassword.onToggle} edge="end">
+                <Iconify
+                  icon={confirmPassword.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                />
               </IconButton>
             </InputAdornment>
           ),

@@ -12,22 +12,31 @@ import { logoClasses } from './classes';
 
 // ----------------------------------------------------------------------
 
-// export const Logo = forwardRef(
-//   ({ width = 40, height = 40, disableLink = false, className, href = '/', sx, ...other }, ref) => {
-//     const theme = useTheme();
+export const Logo = forwardRef(
+  ({ width = 40, height = 40, disableLink = false, className, href = '/', sx, ...other }, ref) => {
+    const theme = useTheme();
 
-//     const gradientId = useId();
+    const gradientId = useId();
 
-//     const PRIMARY_LIGHT = theme.vars.palette.primary.light;
+    const PRIMARY_LIGHT = theme.vars.palette.primary.light;
 
-//     const PRIMARY_MAIN = theme.vars.palette.primary.main;
+    const PRIMARY_MAIN = theme.vars.palette.primary.main;
 
-//     const PRIMARY_DARK = theme.vars.palette.primary.dark;
+    const PRIMARY_DARK = theme.vars.palette.primary.dark;
 
-    /*
-     * OR using local (public folder)
-     * const logo = ( <Box alt="logo" component="img" src={`${CONFIG.site.basePath}/logo/logo-single.svg`} width={width} height={height} /> );
-     */
+    
+      // OR using local (public folder)
+      // const logo = ( <Box alt="logo" component="img" src={`${CONFIG.site.basePath}/logo/digistamp-logo.png`} width={width} height={height} /> );
+     const logo = (
+      <Box
+        alt="logo"
+        component="img"
+        src="/logo/digistamp-logo.png" // Update this path to the actual path of your PNG file
+        width={width}
+        height={height}
+        sx={{ objectFit: 'contain' }} // Ensures the logo scales nicely
+      />
+    );
 
     // const logo = (
     //   <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 512 512">
@@ -65,19 +74,6 @@ import { logoClasses } from './classes';
     //   </svg>
     // );
 
-    export const Logo = forwardRef(
-      ({ width = 40, height = 40, disableLink = false, className, href = '/', sx, ...other }, ref) => {
-        const logo = (
-          <Box
-            alt="logo"
-            component="img"
-            src="/logo/digistamp-logo.png" // Update this path to the actual path of your PNG file
-            width={width}
-            height={height}
-            sx={{ objectFit: 'contain' }} // Ensures the logo scales nicely
-          />
-        );
-    
     return (
       <NoSsr
         fallback={

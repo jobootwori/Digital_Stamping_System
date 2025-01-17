@@ -7,7 +7,7 @@ import { updateCoreWithSettings, updateComponentsWithSettings } from './with-set
 
 // ----------------------------------------------------------------------
 
-export function createTheme(localeComponents, settings) {
+export function createTheme(settings) {
   const initialTheme = {
     colorSchemes,
     shadows: shadows(settings.colorScheme),
@@ -31,12 +31,7 @@ export function createTheme(localeComponents, settings) {
   /**
    * 2.Create theme + add locale + update component with settings.
    */
-  const theme = extendTheme(
-    updateTheme,
-    localeComponents,
-    updateComponentsWithSettings(settings),
-    overridesTheme
-  );
+  const theme = extendTheme(updateTheme, updateComponentsWithSettings(settings), overridesTheme);
 
   return theme;
 }
