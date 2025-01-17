@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from stamps.views import RegisterView, UserDetailView, DocumentUploadView, StampListView
 from django.views.generic import RedirectView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,5 +26,7 @@ urlpatterns = [
     path('me/', UserDetailView.as_view(), name='user-detail'),
     path('upload/', DocumentUploadView.as_view(), name='document-upload'),
     path('stamps/', StampListView.as_view(), name='stamp-list'),
+    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # Login
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh Token
     path('', RedirectView.as_view(url='register/')),  # Redirect root to 'register/'
 ]
