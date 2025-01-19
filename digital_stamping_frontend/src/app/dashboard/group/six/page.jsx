@@ -4,8 +4,8 @@ import { BlankView } from 'src/sections/blank/view';
 
 // ----------------------------------------------------------------------
 
-export const metadata = { title: `Dashboard - ${CONFIG.site.name}` };
+export const metadata = { title: `Page six | Dashboard - ${CONFIG.site.name}` };
 
 export default function Page() {
-  return <BlankView title="Page one" />;
+  return <BlankView title="Page six" />;
 }
