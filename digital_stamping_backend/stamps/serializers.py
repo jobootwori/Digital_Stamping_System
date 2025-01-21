@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Document, Stamp
+from .models import Document, Stamp, CustomUser
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -15,7 +15,7 @@ class StampSerializer(serializers.ModelSerializer):
         model = Stamp
         fields = '__all__'
 
-User = get_user_model()
+# User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=True, max_length=50)
@@ -25,12 +25,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True, required=True)
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = ('first_name', 'last_name', 'email', 'password', 'password2')
 
     def validate_email(self, value):
         # Check if email already exists
-        if User.objects.filter(email=value).exists():
+        if CustomUser.objects.filter(email=value).exists():
             raise serializers.ValidationError("This email is already registered.")
         return value
 
@@ -46,7 +46,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('password2', None)
 
         # Create user with validated_data
-         user = User.objects.create_user(
+        user = CustomUser.objects.create_user(
             email=validated_data['email'],
             password=validated_data['password'],
             first_name=validated_data['first_name'],
@@ -56,5 +56,5 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ('id', 'username', 'email')
+        model =CustomUser
+        fields = ('id', 'first_name', 'last_name', 'email')
