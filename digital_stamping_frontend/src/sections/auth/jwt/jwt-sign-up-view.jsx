@@ -24,14 +24,16 @@ import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
 import { signUp } from 'src/auth/context/jwt';
+
 import { useAuthContext } from 'src/auth/hooks';
+const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
 
 // ----------------------------------------------------------------------
 
 export const SignUpSchema = zod
   .object({
-    firstName: zod.string().min(1, { message: 'First name is required!' }),
-    lastName: zod.string().min(1, { message: 'Last name is required!' }),
+    first_name: zod.string().min(1, { message: 'First name is required!' }),
+    last_name: zod.string().min(1, { message: 'Last name is required!' }),
     email: zod
       .string()
       .min(1, { message: 'Email is required!' })
@@ -60,9 +62,11 @@ export function JwtSignUpView() {
 
   const [errorMsg, setErrorMsg] = useState('');
 
+  const [signupSuccess, setSignupSuccess] = useState(false);
+
   const defaultValues = {
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -80,29 +84,37 @@ export function JwtSignUpView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      const response = await axios.post('/api/register/',({
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-      }));
-      await checkUserSession?.();
+      const response = await axios.post(
+        `${SERVER_URL}/register/`,
+        {
+          email: data.email,
+          password: data.password,
+          password2: data.confirmPassword,
+          first_name: data.first_name,
+          last_name: data.last_name,
 
-      router.refresh();
-    }
-    catch (error) {
-    console.error(error);
-    if (error.response && error.response.data) {
-      // If the error is from the API and contains validation errors
-      const errorMessages = error.response.data;
-      const emailError = errorMessages.email ? errorMessages.email[0] : '';
-      const passwordError = errorMessages.password ? errorMessages.password[0] : '';
+        },
+        { 'Content-Type': 'application/json' }
+      );
       
-      setErrorMsg(emailError || passwordError || 'An error occurred.');
-    } else {
-      setErrorMsg('An error occurred.');
+      await checkUserSession?.();
+      setSignupSuccess(true); // Set success state to true
+
+      router.push(paths.auth.jwt.signIn); // Redirect to sign in page after successful registration
+      
+    } catch (error) {
+      console.error(error);
+      if (error.response && error.response.data) {
+        // If the error is from the API and contains validation errors
+        const errorMessages = error.response.data;
+        const emailError = errorMessages.email ? errorMessages.email[0] : '';
+        const passwordError = errorMessages.password ? errorMessages.password[0] : '';
+
+        setErrorMsg(emailError || passwordError);
+      } else {
+        setErrorMsg('An error occurred.');
+      }
     }
-  }
   });
 
   const renderHead = (
@@ -124,11 +136,26 @@ export function JwtSignUpView() {
   const renderForm = (
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <Field.Text name="firstName" label="First name" placeholder="Odoyo" InputLabelProps={{ shrink: true }} />
-        <Field.Text name="lastName" label="Last name" placeholder="Obambla" InputLabelProps={{ shrink: true }} />
+        <Field.Text
+          name="first_name"
+          label="First name"
+          placeholder="Odoyo"
+          InputLabelProps={{ shrink: true }}
+        />
+        <Field.Text
+          name="last_name"
+          label="Last name"
+          placeholder="Obambla"
+          InputLabelProps={{ shrink: true }}
+        />
       </Stack>
 
-      <Field.Text name="email" label="Email address" placeholder="odoyoobambla@digistamp.com" InputLabelProps={{ shrink: true }} />
+      <Field.Text
+        name="email"
+        label="Email address"
+        placeholder="odoyoobambla@digistamp.com"
+        InputLabelProps={{ shrink: true }}
+      />
 
       <Field.Text
         name="password"
@@ -173,12 +200,18 @@ export function JwtSignUpView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Create account..."
+        loadingIndicator="Creating account..."
       >
         Create account
       </LoadingButton>
     </Stack>
   );
+
+  const renderSuccess = signupSuccess && (
+    <Alert severity="info" sx={{ mb: 3 }}>
+      Sign up successful
+    </Alert>
+    );
 
   const renderTerms = (
     <Typography
@@ -206,11 +239,15 @@ export function JwtSignUpView() {
     <>
       {renderHead}
 
+      
+
       {!!errorMsg && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {errorMsg}
         </Alert>
       )}
+
+      {renderSuccess}
 
       <Form methods={methods} onSubmit={onSubmit}>
         {renderForm}
