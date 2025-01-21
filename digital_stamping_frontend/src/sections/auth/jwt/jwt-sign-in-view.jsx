@@ -1,5 +1,6 @@
 'use client';
 
+import axios from 'axios';
 import { z as zod } from 'zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -23,7 +24,9 @@ import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
 import { useAuthContext } from 'src/auth/hooks';
-import { signInWithPassword } from 'src/auth/context/jwt';
+
+const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
+// import { signInWithPassword } from 'src/auth/context/jwt';
 
 // ----------------------------------------------------------------------
 
@@ -35,7 +38,7 @@ export const SignInSchema = zod.object({
   password: zod
     .string()
     .min(1, { message: 'Password is required!' })
-    .min(6, { message: 'Password must be at least 6 characters!' }),
+    .min(8, { message: 'Password must be at least 8 characters!' }),
 });
 
 // ----------------------------------------------------------------------
@@ -47,11 +50,14 @@ export function JwtSignInView() {
 
   const [errorMsg, setErrorMsg] = useState('');
 
+  const [isSignInSuccessful, setIsSignInSuccessful] = useState(false); // State to track sign-in success
+
   const password = useBoolean();
 
+  
   const defaultValues = {
-    email: 'demo@minimals.cc',
-    password: '@demo1',
+    email: '',
+    password: '',
   };
 
   const methods = useForm({
@@ -66,13 +72,31 @@ export function JwtSignInView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await signInWithPassword({ email: data.email, password: data.password });
-      await checkUserSession?.();
+      // await signInWithPassword({ email: data.email, password: data.password });
       
-      router.refresh();
+      const response = await axios.post(
+       `${SERVER_URL}/login/`,
+        {
+          email: data.email, // My backend uses email login
+          password: data.password,
+        },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      // Store JWT in localStorage
+      const { access, refresh } = response.data;
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('refreshToken', refresh);
+
+      // Check user session
+      await checkUserSession?.();
+      setIsSignInSuccessful(true);
+
+      router.push(paths.dashboard.root); // Redirect to dashboard after successful sign in  
+      // router.refresh();
     } catch (error) {
-      console.error(error);
-      setErrorMsg(error instanceof Error ? error.message : error);
+      console.error('Error during Login:', error);
+      setErrorMsg(error.response?.data?.detail || 'Invalid email or password. Please try again.');
     }
   });
 
@@ -94,7 +118,7 @@ export function JwtSignInView() {
 
   const renderForm = (
     <Stack spacing={3}>
-      <Field.Text name="email" label="Email address" InputLabelProps={{ shrink: true }} />
+      <Field.Text name="email" label="Email address" placeholder="Odoyo@gmail.com"  InputLabelProps={{ shrink: true }} />
 
       <Stack spacing={1.5}>
         <Link
@@ -110,7 +134,7 @@ export function JwtSignInView() {
         <Field.Text
           name="password"
           label="Password"
-          placeholder="6+ characters"
+          placeholder="8+ characters"
           type={password.value ? 'text' : 'password'}
           InputLabelProps={{ shrink: true }}
           InputProps={{
@@ -132,7 +156,7 @@ export function JwtSignInView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Sign in..."
+        loadingIndicator="Signing in ..."
       >
         Sign in
       </LoadingButton>
@@ -143,11 +167,11 @@ export function JwtSignInView() {
     <>
       {renderHead}
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        Use <strong>{defaultValues.email}</strong>
-        {' with password '}
-        <strong>{defaultValues.password}</strong>
-      </Alert>
+      {isSignInSuccessful && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          Signing In Successful
+        </Alert>
+      )}
 
       {!!errorMsg && (
         <Alert severity="error" sx={{ mb: 3 }}>
