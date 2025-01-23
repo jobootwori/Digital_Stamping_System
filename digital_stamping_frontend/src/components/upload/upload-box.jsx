@@ -1,13 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Stage, Layer, Image as KonvaImage } from 'react-konva';
 import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';import React, { useRef, useState, useEffect } from 'react';
-import { Stage, Layer, Image as KonvaImage } from 'react-konva';
-import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
 import * as pdfjsLib from 'pdfjs-dist';
+
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.js`;
 
