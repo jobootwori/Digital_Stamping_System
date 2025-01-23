@@ -19,20 +19,20 @@ export default function Page() {
       </Typography>
 
       {/* Display the UploadAvatar for single uploads */}
-      <Box sx={{ mb: 4 }}>
+      {/* <Box sx={{ mb: 4 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
           Upload a Profile Image or Single File
         </Typography>
         <UploadAvatar />
-      </Box>
+      </Box> */}
 
       {/* Display the UploadBox for compact file uploads */}
-      <Box sx={{ mb: 4 }}>
+      {/* <Box sx={{ mb: 4 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
           Quick Upload Box
         </Typography>
         <UploadBox placeholder="Drag and drop files or click to upload" />
-      </Box>
+      </Box> */}
 
       {/* Display the Upload component for managing multiple files */}
       <Box>
