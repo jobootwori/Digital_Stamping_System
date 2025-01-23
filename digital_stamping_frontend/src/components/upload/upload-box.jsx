@@ -1,135 +1,41 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Stage, Layer, Image as KonvaImage } from 'react-konva';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import React, { useState } from 'react';
+import { Stage, Layer, Circle, Image as KonvaImage } from 'react-konva';
 import Box from '@mui/material/Box';
-import Slider from '@mui/material/Slider';
-import * as pdfjsLib from 'pdfjs-dist';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.js`;
-
-export function UploadBox({ placeholder = 'Drag and drop an image or PDF here', sx }) {
-  const [uploadedFile, setUploadedFile] = useState(null);
-  const [fileType, setFileType] = useState(null); // 'image' or 'pdf'
-  const [images, setImages] = useState([]); // Images for PDFs or single image
-  const [currentPage, setCurrentPage] = useState(1); // Current page for PDFs
-  const [totalPages, setTotalPages] = useState(1);
-  const [zoom, setZoom] = useState(1);
+export function UploadAvatar({ placeholder = 'Upload an avatar', sx }) {
+  const [uploadedImage, setUploadedImage] = useState(null);
   const [dragOver, setDragOver] = useState(false);
 
-  const stageRef = useRef(null);
-
-  // Handle file upload
   const handleFileUpload = (file) => {
-    if (!file) return;
-
-    const fileType = file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'pdf' : null;
-
-    if (fileType === 'image') {
+    if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = () => {
         const img = new window.Image();
         img.src = reader.result;
         img.onload = () => {
-          setImages([img]);
-          setFileType('image');
+          setUploadedImage(img);
         };
       };
       reader.readAsDataURL(file);
-    } else if (fileType === 'pdf') {
-      renderPDF(file);
-      setFileType('pdf');
     } else {
-      alert('Unsupported file format. Please upload an image or PDF.');
+      alert('Unsupported file type. Please upload an image.');
     }
   };
 
-  // Render PDF pages using PDF.js
-  const renderPDF = async (file) => {
-    const fileReader = new FileReader();
-    fileReader.onload = async () => {
-      const pdfData = new Uint8Array(fileReader.result);
-      const pdf = await pdfjsLib.getDocument(pdfData).promise;
-      setTotalPages(pdf.numPages);
-
-      const renderPage = async (pageNum) => {
-        const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 2 });
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        await page.render({ canvasContext: context, viewport }).promise;
-
-        const img = new window.Image();
-        img.src = canvas.toDataURL();
-        img.onload = () => {
-          setImages([img]);
-        };
-      };
-
-      await renderPage(1); // Render the first page by default
-    };
-    fileReader.readAsArrayBuffer(file);
-  };
-
-  // Pagination controls
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-      renderPDFPage(currentPage + 1);
-    }
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-      renderPDFPage(currentPage - 1);
-    }
-  };
-
-  const renderPDFPage = async (pageNum) => {
-    const fileReader = new FileReader();
-    fileReader.onload = async () => {
-      const pdfData = new Uint8Array(fileReader.result);
-      const pdf = await pdfjsLib.getDocument(pdfData).promise;
-      const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 2 });
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-
-      await page.render({ canvasContext: context, viewport }).promise;
-
-      const img = new window.Image();
-      img.src = canvas.toDataURL();
-      img.onload = () => {
-        setImages([img]);
-      };
-    };
-    fileReader.readAsArrayBuffer(uploadedFile);
-  };
-
-  // Zoom controls
-  const handleZoomChange = (event, newValue) => {
-    setZoom(newValue);
-    stageRef.current.scale({ x: newValue, y: newValue });
-    stageRef.current.batchDraw();
-  };
-
-  // Drag-and-drop handlers
   const handleDrop = (event) => {
     event.preventDefault();
     setDragOver(false);
     const file = event.dataTransfer.files[0];
-    setUploadedFile(file);
     handleFileUpload(file);
   };
 
-  const handleDragOver = (event) => event.preventDefault();
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    setDragOver(true);
+  };
+
   const handleDragLeave = () => setDragOver(false);
 
   return (
@@ -138,18 +44,39 @@ export function UploadBox({ placeholder = 'Drag and drop an image or PDF here', 
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       sx={{
-        width: 800,
-        height: 600,
+        width: 200,
+        height: 200,
         border: `2px dashed ${dragOver ? '#00f' : '#ccc'}`,
-        borderRadius: 8,
+        borderRadius: '50%',
+        overflow: 'hidden',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative',
         bgcolor: dragOver ? '#f0f8ff' : '#fff',
         ...sx,
       }}
     >
+      {uploadedImage ? (
+        <Stage width={200} height={200}>
+          <Layer>
+            <KonvaImage
+              image={uploadedImage}
+              x={0}
+              y={0}
+              width={200}
+              height={200}
+              clipFunc={(ctx) => {
+                ctx.arc(100, 100, 100, 0, Math.PI * 2, false);
+              }}
+            />
+            <Circle x={100} y={100} radius={100} stroke="black" strokeWidth={2} />
+          </Layer>
+        </Stage>
+      ) : (
+        <Typography variant="body1" color="text.secondary">
+          {placeholder}
+        </Typography>
+      )}
       <Box
         sx={{
           position: 'absolute',
@@ -161,67 +88,16 @@ export function UploadBox({ placeholder = 'Drag and drop an image or PDF here', 
       >
         <input
           type="file"
-          accept="image/*,application/pdf"
+          accept="image/*"
           style={{ display: 'none' }}
-          id="upload-input"
+          id="upload-avatar-input"
           onChange={(e) => handleFileUpload(e.target.files[0])}
         />
-        <label htmlFor="upload-input">
+        <label htmlFor="upload-avatar-input">
           <Button variant="contained" component="span">
-            Upload File
+            Upload
           </Button>
         </label>
-      </Box>
-
-      {images.length > 0 ? (
-        <>
-          <Stage
-            ref={stageRef}
-            width={800}
-            height={600}
-            draggable
-            style={{ border: '1px solid #ccc' }}
-          >
-            <Layer>
-              {images.map((img, index) => (
-                <KonvaImage
-                  key={index}
-                  x={0}
-                  y={0}
-                  image={img}
-                  width={800}
-                  height={600}
-                />
-              ))}
-            </Layer>
-          </Stage>
-          {fileType === 'pdf' && (
-            <Box sx={{ position: 'absolute', bottom: 10, left: 10, display: 'flex', gap: 1 }}>
-              <Button variant="contained" onClick={handlePreviousPage} disabled={currentPage <= 1}>
-                Previous Page
-              </Button>
-              <Button variant="contained" onClick={handleNextPage} disabled={currentPage >= totalPages}>
-                Next Page
-              </Button>
-            </Box>
-          )}
-        </>
-      ) : (
-        <Typography variant="body1" color="text.secondary">
-          {placeholder}
-        </Typography>
-      )}
-
-      {/* Zoom Controls */}
-      <Box sx={{ position: 'absolute', bottom: 10, right: 10, width: 200 }}>
-        <Typography variant="caption">Zoom</Typography>
-        <Slider
-          value={zoom}
-          onChange={handleZoomChange}
-          min={0.5}
-          max={3}
-          step={0.1}
-        />
       </Box>
     </Box>
   );

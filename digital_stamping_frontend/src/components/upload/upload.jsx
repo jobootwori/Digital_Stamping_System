@@ -1,119 +1,99 @@
-import { useDropzone } from 'react-dropzone';
-
+import React, { useState, useRef } from 'react';
+import { Stage, Layer, Image as KonvaImage } from 'react-konva';
 import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import FormHelperText from '@mui/material/FormHelperText';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Iconify } from '../iconify';
-import { UploadPlaceholder } from './components/placeholder';
-import { RejectionFiles } from './components/rejection-files';
-import { MultiFilePreview } from './components/preview-multi-file';
-import { DeleteButton, SingleFilePreview } from './components/preview-single-file';
-
-// ----------------------------------------------------------------------
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import { Iconify } from '../iconify'; // Ensure this is the correct path
 
 export function Upload({
+  placeholder = 'Drag and drop files or click to upload',
   sx,
-  value,
-  error,
-  disabled,
-  onDelete,
-  onUpload,
-  onRemove,
-  thumbnail,
-  helperText,
-  onRemoveAll,
-  multiple = false,
-  ...other
+  multiple = true,
 }) {
-  const { getRootProps, getInputProps, isDragActive, isDragReject, fileRejections } = useDropzone({
-    multiple,
-    disabled,
-    ...other,
-  });
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const stageRef = useRef(null);
 
-  const isArray = Array.isArray(value) && multiple;
+  const handleFileUpload = (files) => {
+    const fileList = Array.from(files);
+    const newImages = fileList.map((file) => {
+      const img = new window.Image();
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+      return img;
+    });
+    setUploadedFiles((prev) => [...prev, ...newImages]);
+  };
 
-  const hasFile = !isArray && !!value;
-
-  const hasFiles = isArray && !!value.length;
-
-  const hasError = isDragReject || !!error;
-
-  const renderMultiPreview = hasFiles && (
-    <>
-      <MultiFilePreview files={value} thumbnail={thumbnail} onRemove={onRemove} sx={{ my: 3 }} />
-
-      {(onRemoveAll || onUpload) && (
-        <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
-          {onRemoveAll && (
-            <Button color="inherit" variant="outlined" size="small" onClick={onRemoveAll}>
-              Remove all
-            </Button>
-          )}
-
-          {onUpload && (
-            <Button
-              size="small"
-              variant="contained"
-              onClick={onUpload}
-              startIcon={<Iconify icon="eva:cloud-upload-fill" />}
-            >
-              Upload
-            </Button>
-          )}
-        </Stack>
-      )}
-    </>
-  );
+  const handleRemoveAll = () => setUploadedFiles([]);
 
   return (
-    <Box sx={{ width: 1, position: 'relative', ...sx }}>
-      <Box
-        {...getRootProps()}
-        sx={{
-          p: 5,
-          outline: 'none',
-          borderRadius: 1,
-          cursor: 'pointer',
-          overflow: 'hidden',
-          position: 'relative',
-          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
-          border: (theme) => `1px dashed ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
-          transition: (theme) => theme.transitions.create(['opacity', 'padding']),
-          '&:hover': { opacity: 0.72 },
-          ...(isDragActive && { opacity: 0.72 }),
-          ...(disabled && { opacity: 0.48, pointerEvents: 'none' }),
-          ...(hasError && {
-            color: 'error.main',
-            borderColor: 'error.main',
-            bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.08),
-          }),
-          ...(hasFile && { padding: '28% 0' }),
-        }}
-      >
-        <input {...getInputProps()} />
-
-        {/* Single file */}
-        {hasFile ? <SingleFilePreview file={value} /> : <UploadPlaceholder />}
-      </Box>
-
-      {/* Single file */}
-      {hasFile && <DeleteButton onClick={onDelete} />}
-
-      {helperText && (
-        <FormHelperText error={!!error} sx={{ px: 2 }}>
-          {helperText}
-        </FormHelperText>
+    <Box
+      sx={{
+        width: 800,
+        height: 600,
+        border: '1px solid #ccc',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        ...sx,
+      }}
+    >
+      <input
+        type="file"
+        accept="image/*"
+        multiple={multiple}
+        style={{ display: 'none' }}
+        id="upload-files-input"
+        onChange={(e) => handleFileUpload(e.target.files)}
+      />
+      <label htmlFor="upload-files-input">
+        <Button
+          variant="contained"
+          component="span"
+          startIcon={<Iconify icon="eva:cloud-upload-outline" />}
+          sx={{ position: 'absolute', top: 10, right: 10 }}
+        >
+          Upload
+        </Button>
+      </label>
+      {uploadedFiles.length > 0 ? (
+        <>
+          <Stage width={800} height={600} draggable ref={stageRef}>
+            <Layer>
+              {uploadedFiles.map((img, index) => (
+                <KonvaImage
+                  key={index}
+                  image={img}
+                  x={index * 50}
+                  y={index * 50}
+                  width={100}
+                  height={100}
+                  draggable
+                />
+              ))}
+            </Layer>
+          </Stage>
+          <Stack direction="row" spacing={2} sx={{ position: 'absolute', bottom: 10 }}>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleRemoveAll}
+              startIcon={<Iconify icon="eva:trash-2-outline" />}
+            >
+              Remove All
+            </Button>
+          </Stack>
+        </>
+      ) : (
+        <Typography variant="body1" color="text.secondary">
+          {placeholder}
+        </Typography>
       )}
-
-      <RejectionFiles files={fileRejections} />
-
-      {/* Multi files */}
-      {renderMultiPreview}
     </Box>
   );
 }
