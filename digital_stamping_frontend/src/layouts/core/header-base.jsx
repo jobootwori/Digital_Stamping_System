@@ -142,12 +142,12 @@ export function HeaderBase({
               {localization && <LanguagePopover data-slot="localization" data={data?.langs} />}
 
               {/* -- Notifications popover -- */}
-              {notifications && (
+              {/* {notifications && (
                 <NotificationsDrawer data-slot="notifications" data={data?.notifications} />
-              )}
+              )} */}
 
               {/* -- Contacts popover -- */}
-              {contacts && <ContactsPopover data-slot="contacts" data={data?.contacts} />}
+              {/* {contacts && <ContactsPopover data-slot="contacts" data={data?.contacts} />} */}
 
               {/* -- Settings button -- */}
               {settings && <SettingsButton data-slot="settings" />}
@@ -159,7 +159,7 @@ export function HeaderBase({
               {signIn && <SignInButton />}
 
               {/* -- Purchase button -- */}
-              {purchase && (
+              {/* {purchase && (
                 <Button
                   data-slot="purchase"
                   variant="contained"
@@ -175,7 +175,7 @@ export function HeaderBase({
                 >
                   Purchase
                 </Button>
-              )}
+              )} */}
             </Box>
 
             {slots?.rightAreaEnd}

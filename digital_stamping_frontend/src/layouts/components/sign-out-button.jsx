@@ -6,6 +6,7 @@ import { useRouter } from 'src/routes/hooks';
 
 import { useAuthContext } from 'src/auth/hooks';
 import { signOut } from 'src/auth/context/jwt/action';
+import { paths } from 'src/routes/paths';
 
 // ----------------------------------------------------------------------
 
@@ -20,7 +21,7 @@ export function SignOutButton({ onClose, ...other }) {
       await checkUserSession?.();
 
       onClose?.();
-      router.refresh();
+      router.push(paths.auth.jwt.signIn); 
     } catch (error) {
       console.error(error);
     }
