@@ -1,98 +1,90 @@
-import React, { useState, useRef } from 'react';
-import { Stage, Layer, Image as KonvaImage } from 'react-konva';
+
+import React, { useState } from 'react';
+import { Stage, Layer, Text, Image as KonvaImage } from 'react-konva';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
-import { Iconify } from '../iconify'; // Ensure this is the correct path
+import { useDropzone } from 'react-dropzone';
 
-export function Upload({
-  placeholder = 'Drag and drop files or click to upload',
-  sx,
-  multiple = true,
-}) {
+export function Upload({ sx, ...props }) {
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const stageRef = useRef(null);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
 
-  const handleFileUpload = (files) => {
-    const fileList = Array.from(files);
-    const newImages = fileList.map((file) => {
-      const img = new window.Image();
-      const reader = new FileReader();
-      reader.onload = () => {
-        img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-      return img;
-    });
-    setUploadedFiles((prev) => [...prev, ...newImages]);
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: { 'image/*': [], 'application/pdf': [] },
+    multiple: true,
+    onDrop: (files) => setUploadedFiles((prev) => [...prev, ...files]),
+  });
+
+  const handleRemoveFile = (index) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleRemoveAll = () => setUploadedFiles([]);
 
+  const handleNextFile = () => {
+    if (currentFileIndex < uploadedFiles.length - 1) {
+      setCurrentFileIndex((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevFile = () => {
+    if (currentFileIndex > 0) {
+      setCurrentFileIndex((prev) => prev - 1);
+    }
+  };
+
+  const renderCurrentFile = () => {
+    if (!uploadedFiles.length) return null;
+    const file = uploadedFiles[currentFileIndex];
+    const img = new window.Image();
+    img.src = URL.createObjectURL(file);
+    return <KonvaImage image={img} width={800} height={600} />;
+  };
+
   return (
-    <Box
-      sx={{
-        width: 800,
-        height: 600,
-        border: '1px solid #ccc',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        ...sx,
-      }}
-    >
-      <input
-        type="file"
-        accept="image/*"
-        multiple={multiple}
-        style={{ display: 'none' }}
-        id="upload-files-input"
-        onChange={(e) => handleFileUpload(e.target.files)}
-      />
-      <label htmlFor="upload-files-input">
-        <Button
-          variant="contained"
-          component="span"
-          startIcon={<Iconify icon="eva:cloud-upload-outline" />}
-          sx={{ position: 'absolute', top: 10, right: 10 }}
-        >
-          Upload
-        </Button>
-      </label>
-      {uploadedFiles.length > 0 ? (
+    <Box sx={{ ...sx }}>
+      <Box
+        {...getRootProps()}
+        sx={{
+          width: 400,
+          height: 200,
+          border: '2px dashed #ccc',
+          borderRadius: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <input {...getInputProps()} />
+        <Button variant="contained">Upload Files</Button>
+      </Box>
+
+      {uploadedFiles.length > 0 && (
         <>
-          <Stage width={800} height={600} draggable ref={stageRef}>
-            <Layer>
-              {uploadedFiles.map((img, index) => (
-                <KonvaImage
-                  key={index}
-                  image={img}
-                  x={index * 50}
-                  y={index * 50}
-                  width={100}
-                  height={100}
-                  draggable
-                />
-              ))}
-            </Layer>
+          <Stage width={800} height={600}>
+            <Layer>{renderCurrentFile()}</Layer>
           </Stage>
-          <Stack direction="row" spacing={2} sx={{ position: 'absolute', bottom: 10 }}>
+
+          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+            <Button onClick={handlePrevFile} disabled={currentFileIndex === 0}>
+              Previous
+            </Button>
             <Button
-              variant="outlined"
-              color="error"
-              onClick={handleRemoveAll}
-              startIcon={<Iconify icon="eva:trash-2-outline" />}
+              onClick={handleNextFile}
+              disabled={currentFileIndex === uploadedFiles.length - 1}
             >
+              Next
+            </Button>
+          </Stack>
+
+          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+            <Button variant="outlined" onClick={handleRemoveAll}>
               Remove All
             </Button>
           </Stack>
         </>
-      ) : (
-        <Typography variant="body1" color="text.secondary">
-          {placeholder}
-        </Typography>
       )}
     </Box>
   );

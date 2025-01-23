@@ -1,104 +1,96 @@
+
 import React, { useState } from 'react';
-import { Stage, Layer, Circle, Image as KonvaImage } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Rect, Text } from 'react-konva';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import { useDropzone } from 'react-dropzone';
 
-export function UploadAvatar({ placeholder = 'Upload an avatar', sx }) {
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [dragOver, setDragOver] = useState(false);
+export function UploadBox({ placeholder = 'Upload a document or image', sx }) {
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [stamps, setStamps] = useState([]);
 
-  const handleFileUpload = (file) => {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new window.Image();
-        img.src = reader.result;
-        img.onload = () => {
-          setUploadedImage(img);
-        };
-      };
-      reader.readAsDataURL(file);
-    } else {
-      alert('Unsupported file type. Please upload an image.');
-    }
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: { 'image/*': [], 'application/pdf': [] },
+    multiple: true,
+    onDrop: (files) => setUploadedFiles((prev) => [...prev, ...files]),
+  });
+
+  const addStamp = () => {
+    const newStamp = {
+      id: Date.now(),
+      x: 50,
+      y: 50,
+      text: 'Stamp Text',
+      color: 'red',
+    };
+    setStamps((prev) => [...prev, newStamp]);
   };
-
-  const handleDrop = (event) => {
-    event.preventDefault();
-    setDragOver(false);
-    const file = event.dataTransfer.files[0];
-    handleFileUpload(file);
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
-    setDragOver(true);
-  };
-
-  const handleDragLeave = () => setDragOver(false);
 
   return (
-    <Box
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      sx={{
-        width: 200,
-        height: 200,
-        border: `2px dashed ${dragOver ? '#00f' : '#ccc'}`,
-        borderRadius: '50%',
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: dragOver ? '#f0f8ff' : '#fff',
-        ...sx,
-      }}
-    >
-      {uploadedImage ? (
-        <Stage width={200} height={200}>
-          <Layer>
-            <KonvaImage
-              image={uploadedImage}
-              x={0}
-              y={0}
-              width={200}
-              height={200}
-              clipFunc={(ctx) => {
-                ctx.arc(100, 100, 100, 0, Math.PI * 2, false);
-              }}
-            />
-            <Circle x={100} y={100} radius={100} stroke="black" strokeWidth={2} />
-          </Layer>
-        </Stage>
-      ) : (
-        <Typography variant="body1" color="text.secondary">
-          {placeholder}
-        </Typography>
-      )}
+    <Box sx={{ ...sx }}>
       <Box
+        {...getRootProps()}
         sx={{
-          position: 'absolute',
-          top: 10,
-          right: 10,
+          width: 400,
+          height: 200,
+          border: '2px dashed #ccc',
+          borderRadius: 2,
           display: 'flex',
-          gap: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          textAlign: 'center',
         }}
       >
-        <input
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          id="upload-avatar-input"
-          onChange={(e) => handleFileUpload(e.target.files[0])}
-        />
-        <label htmlFor="upload-avatar-input">
-          <Button variant="contained" component="span">
-            Upload
-          </Button>
-        </label>
+        <input {...getInputProps()} />
+        <Typography variant="body2">{placeholder}</Typography>
       </Box>
+
+      {uploadedFiles.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="h6">Uploaded Files:</Typography>
+          {uploadedFiles.map((file, index) => (
+            <Typography key={index} variant="body2">
+              {file.name}
+            </Typography>
+          ))}
+          <Stage width={800} height={600}>
+            <Layer>
+              {uploadedFiles.map((file, index) => (
+                <KonvaImage
+                  key={index}
+                  image={URL.createObjectURL(file)}
+                  width={800}
+                  height={600}
+                />
+              ))}
+              {stamps.map((stamp) => (
+                <Rect
+                  key={stamp.id}
+                  x={stamp.x}
+                  y={stamp.y}
+                  width={100}
+                  height={50}
+                  fill={stamp.color}
+                  draggable
+                  onDragEnd={(e) => {
+                    const { x, y } = e.target.position();
+                    setStamps((prev) =>
+                      prev.map((s) =>
+                        s.id === stamp.id ? { ...s, x, y } : s
+                      )
+                    );
+                  }}
+                />
+              ))}
+            </Layer>
+          </Stage>
+          <Button onClick={addStamp} sx={{ mt: 2 }}>
+            Add Stamp
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }
