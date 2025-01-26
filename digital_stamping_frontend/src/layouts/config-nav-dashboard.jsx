@@ -48,7 +48,7 @@ export const navData = [
     items: [
       { title: 'Upload Files ', path: paths.dashboard.root, icon: ICONS.menuItem },
       { title: 'My Documents ', path: paths.dashboard.two, icon: ICONS.file },
-      // { title: 'Three', path: paths.dashboard.three, icon: ICONS.analytics },
+      { title: 'Stamps Management', path: paths.dashboard.three, icon: ICONS.job },
     ],
   },
   /**

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Stage, Layer, Image as KonvaImage, Rect, Text, Group } from 'react-konva';
 import Box from '@mui/material/Box';
@@ -7,18 +8,10 @@ import Typography from '@mui/material/Typography';
 import Slider from '@mui/material/Slider';
 import { ChromePicker } from 'react-color';
 import * as pdfjsLib from 'pdfjs-dist';
-
-// import { Document, Page, pdfjs } from "react-pdf";
-// import pdfWorker from 'pdfjs-dist/legacy/build/pdf.worker.min.js';
+import { jsPDF } from 'jspdf';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
-// pdfWorker.GlobalWorkerOptions.workerSrc = pdfWorker;
-// import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.js';
-
-// pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
-
-// pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 export function Upload() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [pdf, setPdf] = useState(null);
@@ -30,7 +23,6 @@ export function Upload() {
   const [stampColor, setStampColor] = useState('#ff0000');
   const [stampText, setStampText] = useState('My Stamp');
 
-  // Handle File Upload
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -48,14 +40,12 @@ export function Upload() {
     reader.readAsDataURL(file);
   };
 
-  // Load PDF with pdfjs-dist
   const loadPdf = async (pdfData) => {
     const loadedPdf = await pdfjsLib.getDocument(pdfData).promise;
     setPdf(loadedPdf);
-    renderPdfPage(loadedPdf, 1); // Render the first page
+    renderPdfPage(loadedPdf, 1);
   };
 
-  // Render a PDF Page
   const renderPdfPage = async (pdf, pageNum) => {
     const page = await pdf.getPage(pageNum);
     const viewport = page.getViewport({ scale: 2 });
@@ -72,7 +62,6 @@ export function Upload() {
     img.onload = () => setImages([img]);
   };
 
-  // Add a New Stamp
   const addStamp = () => {
     const newStamp = {
       id: stamps.length + 1,
@@ -84,7 +73,6 @@ export function Upload() {
     setStamps((prevStamps) => [...prevStamps, newStamp]);
   };
 
-  // Drag and Drop Stamps
   const handleStampDragEnd = (id, e) => {
     const { x, y } = e.target.position();
     setStamps((prevStamps) =>
@@ -92,23 +80,6 @@ export function Upload() {
     );
   };
 
-  // Save Stamps
-  const saveStamps = () => {
-    localStorage.setItem('stamps', JSON.stringify(stamps));
-    alert('Stamps saved successfully!');
-  };
-
-  // Load Stamps
-  const loadStamps = () => {
-    const savedStamps = JSON.parse(localStorage.getItem('stamps'));
-    if (savedStamps) {
-      setStamps(savedStamps);
-    } else {
-      alert('No saved stamps found!');
-    }
-  };
-
-  // Render Stamps
   const renderStamps = () =>
     stamps.map((stamp) => (
       <Group
@@ -131,11 +102,25 @@ export function Upload() {
       </Group>
     ));
 
-  // Render Images (PDF Pages or Uploaded Images)
   const renderImages = () =>
     images.map((img, index) => (
       <KonvaImage key={index} image={img} width={800} height={600} />
     ));
+
+  const downloadCanvasAsImage = () => {
+    const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+    const link = document.createElement('a');
+    link.download = 'stamped-document.png';
+    link.href = uri;
+    link.click();
+  };
+
+  const downloadCanvasAsPDF = () => {
+    const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+    const pdf = new jsPDF('landscape', 'px', [800, 600]);
+    pdf.addImage(uri, 'PNG', 0, 0, 800, 600);
+    pdf.save('stamped-document.pdf');
+  };
 
   return (
     <Box sx={{ textAlign: 'center', p: 4 }}>
@@ -143,7 +128,6 @@ export function Upload() {
         Upload and Manage Documents
       </Typography>
 
-      {/* Upload Button */}
       <input
         type="file"
         accept="image/*,application/pdf"
@@ -157,7 +141,6 @@ export function Upload() {
         </Button>
       </label>
 
-      {/* Canvas */}
       <Stage
         width={800}
         height={600}
@@ -175,73 +158,12 @@ export function Upload() {
         </Layer>
       </Stage>
 
-      {/* Zoom Control */}
-      <Box sx={{ mt: 2 }}>
-        <Typography variant="subtitle1">Zoom</Typography>
-        <Slider
-          value={zoom}
-          min={0.5}
-          max={3}
-          step={0.1}
-          onChange={(e, value) => {
-            setZoom(value);
-            stageRef.current.scale({ x: value, y: value });
-            stageRef.current.batchDraw();
-          }}
-        />
-      </Box>
-
-      {/* Pagination */}
-      {pdf && (
-        <Stack direction="row" spacing={2} sx={{ mt: 2, justifyContent: 'center' }}>
-          <Button
-            variant="outlined"
-            disabled={currentPage === 1}
-            onClick={() => {
-              const newPage = currentPage - 1;
-              setCurrentPage(newPage);
-              renderPdfPage(pdf, newPage);
-            }}
-          >
-            Previous Page
-          </Button>
-          <Button
-            variant="outlined"
-            disabled={currentPage === pdf.numPages}
-            onClick={() => {
-              const newPage = currentPage + 1;
-              setCurrentPage(newPage);
-              renderPdfPage(pdf, newPage);
-            }}
-          >
-            Next Page
-          </Button>
-        </Stack>
-      )}
-
-      {/* Stamp Customization */}
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="subtitle1">Customize Stamp</Typography>
-        <ChromePicker color={stampColor} onChangeComplete={(color) => setStampColor(color.hex)} />
-        <input
-          type="text"
-          placeholder="Stamp Text"
-          value={stampText}
-          onChange={(e) => setStampText(e.target.value)}
-          style={{ marginTop: 16, padding: 8, fontSize: 16 }}
-        />
-        <Button variant="contained" sx={{ mt: 2 }} onClick={addStamp}>
-          Add Stamp
-        </Button>
-      </Box>
-
-      {/* Save and Load Stamps */}
       <Stack direction="row" spacing={2} sx={{ mt: 2, justifyContent: 'center' }}>
-        <Button variant="contained" onClick={saveStamps}>
-          Save Stamps
+        <Button variant="contained" onClick={downloadCanvasAsImage}>
+          Download as Image
         </Button>
-        <Button variant="outlined" onClick={loadStamps}>
-          Load Stamps
+        <Button variant="contained" onClick={downloadCanvasAsPDF}>
+          Download as PDF
         </Button>
       </Stack>
     </Box>
@@ -249,123 +171,3 @@ export function Upload() {
 }
 
 
-
-// import { useDropzone } from 'react-dropzone';
-
-// import Box from '@mui/material/Box';
-// import Stack from '@mui/material/Stack';
-// import Button from '@mui/material/Button';
-// import FormHelperText from '@mui/material/FormHelperText';
-
-// import { varAlpha } from 'src/theme/styles';
-
-// import { Iconify } from '../iconify';
-// import { UploadPlaceholder } from './components/placeholder';
-// import { RejectionFiles } from './components/rejection-files';
-// import { MultiFilePreview } from './components/preview-multi-file';
-// import { DeleteButton, SingleFilePreview } from './components/preview-single-file';
-
-// // ----------------------------------------------------------------------
-
-// export function Upload({
-//   sx,
-//   value,
-//   error,
-//   disabled,
-//   onDelete,
-//   onUpload,
-//   onRemove,
-//   thumbnail,
-//   helperText,
-//   onRemoveAll,
-//   multiple = false,
-//   ...other
-// }) {
-//   const { getRootProps, getInputProps, isDragActive, isDragReject, fileRejections } = useDropzone({
-//     multiple,
-//     disabled,
-//     ...other,
-//   });
-
-//   const isArray = Array.isArray(value) && multiple;
-
-//   const hasFile = !isArray && !!value;
-
-//   const hasFiles = isArray && !!value.length;
-
-//   const hasError = isDragReject || !!error;
-
-//   const renderMultiPreview = hasFiles && (
-//     <>
-//       <MultiFilePreview files={value} thumbnail={thumbnail} onRemove={onRemove} sx={{ my: 3 }} />
-
-//       {(onRemoveAll || onUpload) && (
-//         <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
-//           {onRemoveAll && (
-//             <Button color="inherit" variant="outlined" size="small" onClick={onRemoveAll}>
-//               Remove all
-//             </Button>
-//           )}
-
-//           {onUpload && (
-//             <Button
-//               size="small"
-//               variant="contained"
-//               onClick={onUpload}
-//               startIcon={<Iconify icon="eva:cloud-upload-fill" />}
-//             >
-//               Upload
-//             </Button>
-//           )}
-//         </Stack>
-//       )}
-//     </>
-//   );
-
-//   return (
-//     <Box sx={{ width: 1, position: 'relative', ...sx }}>
-//       <Box
-//         {...getRootProps()}
-//         sx={{
-//           p: 5,
-//           outline: 'none',
-//           borderRadius: 1,
-//           cursor: 'pointer',
-//           overflow: 'hidden',
-//           position: 'relative',
-//           bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
-//           border: (theme) => `1px dashed ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
-//           transition: (theme) => theme.transitions.create(['opacity', 'padding']),
-//           '&:hover': { opacity: 0.72 },
-//           ...(isDragActive && { opacity: 0.72 }),
-//           ...(disabled && { opacity: 0.48, pointerEvents: 'none' }),
-//           ...(hasError && {
-//             color: 'error.main',
-//             borderColor: 'error.main',
-//             bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.08),
-//           }),
-//           ...(hasFile && { padding: '28% 0' }),
-//         }}
-//       >
-//         <input {...getInputProps()} />
-
-//         {/* Single file */}
-//         {hasFile ? <SingleFilePreview file={value} /> : <UploadPlaceholder />}
-//       </Box>
-
-//       {/* Single file */}
-//       {hasFile && <DeleteButton onClick={onDelete} />}
-
-//       {helperText && (
-//         <FormHelperText error={!!error} sx={{ px: 2 }}>
-//           {helperText}
-//         </FormHelperText>
-//       )}
-
-//       <RejectionFiles files={fileRejections} />
-
-//       {/* Multi files */}
-//       {renderMultiPreview}
-//     </Box>
-//   );
-// }

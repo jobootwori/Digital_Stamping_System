@@ -13,7 +13,7 @@ class DocumentSerializer(serializers.ModelSerializer):
 class StampSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stamp
-        fields = '__all__'
+        fields = fields = ['id', 'user', 'shape', 'color', 'text', 'sub_text', 'text_color', 'size', 'logo']  # Added missing fields
 
 # User = get_user_model()
 
