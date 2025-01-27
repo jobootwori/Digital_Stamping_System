@@ -30,18 +30,23 @@ const Stamp = () => {
 
   const handleSaveStamp = async () => {
     const stampData = {
-      main_text: text,
-      sub_text: subText,
-      background_color: color,
-      text_color: textColor,
+      text, 
+      sub_text: subText, 
+      color, 
+      text_color: textColor, 
       shape,
       size,
     };
 
     try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setErrorMessage('User is not logged in. Please log in first.');
+        return;
+      }
       const response = await axios.post(`${SERVER_URL}/stamps/create/`, stampData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access')}`, // Include JWT token
+          Authorization: `Bearer ${token}`, // Include JWT token
         },
       });
 
@@ -61,9 +66,17 @@ const Stamp = () => {
   };
   const fetchSavedStamps = async () => {
     try {
+      const token = localStorage.getItem('accessToken');
+      // console.log('This should be the access token:', localStorage.getItem('access'));
+
+      if (!token) {
+        console.error('User is not logged in. Cannot fetch stamps.');
+        return;
+      }
+
       const response = await axios.get(`${SERVER_URL}/stamps/`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access')}`, // Include JWT token
+          Authorization: `Bearer ${token}`, // Include JWT token
         },
       });
 

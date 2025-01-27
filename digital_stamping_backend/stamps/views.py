@@ -28,10 +28,12 @@ class StampCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = StampSerializer(data=request.data)
+        print(f"User: {request.user}")  # Debugging: Check logged-in user
+        serializer = StampSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save(user=request.user)  # Associate the stamp with the logged-in user
+            serializer.save()  # Automatically associate the logged-in user
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print(serializer.errors)  # Debugging: Check errors
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class StampListView(APIView):

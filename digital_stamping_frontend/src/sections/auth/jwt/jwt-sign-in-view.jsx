@@ -91,7 +91,7 @@ export function JwtSignInView() {
       // Check user session
       await checkUserSession?.();
       setIsSignInSuccessful(true);
-
+      // console.log('this should be the loginside token', localStorage.getItem('accessToken'));
       router.push(paths.dashboard.root); // Redirect to dashboard after successful sign in  
       // router.refresh();
     } catch (error) {

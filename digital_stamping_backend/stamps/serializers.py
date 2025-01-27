@@ -13,7 +13,14 @@ class DocumentSerializer(serializers.ModelSerializer):
 class StampSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stamp
-        fields = fields = ['id', 'user', 'shape', 'color', 'text', 'sub_text', 'text_color', 'size', 'logo']  # Added missing fields
+        fields = ['id', 'user', 'shape', 'color', 'text', 'sub_text', 'text_color', 'size', 'logo']
+        read_only_fields = ['id', 'user']  # Ensure `user` is read-only
+
+    def create(self, validated_data):
+        # Get the current user from the request
+        request = self.context.get('request')
+        validated_data['user'] = request.user  # Automatically associate the logged-in user
+        return super().create(validated_data)
 
 # User = get_user_model()
 
