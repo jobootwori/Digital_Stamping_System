@@ -58,6 +58,8 @@ class Stamp(models.Model):
     logo = models.ImageField(upload_to='logos/', blank=True, null=True)
     text_color = models.CharField(max_length=7, default='#000000')
     size = models.IntegerField(null=True, blank=True)
+    x = models.IntegerField(null=True, blank=True)
+    y = models.IntegerField(null=True, blank=True)
    
     def __str__(self):
         return f"{self.text} ({self.shape})"  # Return the text and shape of the stamp

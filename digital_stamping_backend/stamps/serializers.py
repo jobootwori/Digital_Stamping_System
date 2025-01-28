@@ -13,7 +13,7 @@ class DocumentSerializer(serializers.ModelSerializer):
 class StampSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stamp
-        fields = ['id', 'user', 'shape', 'color', 'text', 'sub_text', 'text_color', 'size', 'logo']
+        fields = ['id', 'user', 'shape', 'color', 'text', 'sub_text', 'text_color', 'size', 'logo', 'x', 'y']
         read_only_fields = ['id', 'user']  # Ensure `user` is read-only
 
     def create(self, validated_data):

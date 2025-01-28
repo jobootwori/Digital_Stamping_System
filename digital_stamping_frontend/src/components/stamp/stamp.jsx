@@ -21,6 +21,8 @@ const Stamp = () => {
   const [textColor, setTextColor] = useState('#ffffff');
   const [shape, setShape] = useState('circle');
   const [size, setSize] = useState(120);
+  const [x, setX] = useState(200); // Initial X position
+  const [y, setY] = useState(200); // Initial Y position
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [savedStamps, setSavedStamps] = useState([]);
@@ -30,12 +32,14 @@ const Stamp = () => {
 
   const handleSaveStamp = async () => {
     const stampData = {
-      text, 
-      sub_text: subText, 
-      color, 
-      text_color: textColor, 
+      text,
+      sub_text: subText,
+      color,
+      text_color: textColor,
       shape,
       size,
+      x,
+      y,
     };
 
     try {
@@ -99,6 +103,8 @@ const Stamp = () => {
     setTextColor('#ffffff');
     setShape('circle');
     setSize(120);
+    setX(200); // Reset X position
+    setY(200); // Reset Y position
     setSuccessMessage('');
     setErrorMessage('');
   };
@@ -196,12 +202,21 @@ const Stamp = () => {
         <Typography variant="subtitle1" sx={{ mb: 2 }}>
           Preview
         </Typography>
-        <Stage width={width} height={height} style={{ backgroundColor: '#fff', borderRadius: 8 }}>
+        <Stage
+          width={width}
+          draggable
+          height={height}
+          style={{ backgroundColor: '#fff', borderRadius: 8 }}
+          onDragEnd={(e) => {
+            setX(e.target.x());
+            setY(e.target.y());
+          }}
+        >
           <Layer>
             {shape === 'circle' && (
               <Circle
-                x={width / 2}
-                y={height / 2}
+                x={x}
+                y={y}
                 radius={size}
                 fill={color}
                 stroke={textColor}
@@ -210,9 +225,7 @@ const Stamp = () => {
             )}
             {shape === 'rectangle' && (
               <Path
-                data={`M${width / 2 - size} ${height / 2 - size} H${
-                  width / 2 + size
-                } V${height / 2 + size} H${width / 2 - size} Z`}
+                data={`M${x - size} ${y - size} H${x + size} V${y + size} H${x - size} Z`}
                 fill={color}
                 stroke={textColor}
                 strokeWidth={4}
