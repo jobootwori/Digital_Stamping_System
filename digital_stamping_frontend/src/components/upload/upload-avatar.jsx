@@ -1,106 +1,130 @@
-import React, { useState } from 'react';
-import { Stage, Layer, Circle, Image as KonvaImage } from 'react-konva';
+import { useState, useEffect } from 'react';
+import { useDropzone } from 'react-dropzone';
+
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import { Iconify } from '../iconify'; // Ensure this is the correct path to your Iconify component
 
-export function UploadAvatar({ placeholder = 'Upload an avatar', sx }) {
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [dragOver, setDragOver] = useState(false);
+import { varAlpha } from 'src/theme/styles';
 
-  const handleFileUpload = (file) => {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new window.Image();
-        img.src = reader.result;
-        img.onload = () => {
-          setUploadedImage(img);
-        };
-      };
-      reader.readAsDataURL(file);
-    } else {
-      alert('Unsupported file type. Please upload an image.');
+import { Image } from '../image';
+import { Iconify } from '../iconify';
+import { RejectionFiles } from './components/rejection-files';
+
+// ----------------------------------------------------------------------
+
+export function UploadAvatar({ sx, error, value, disabled, helperText, ...other }) {
+  const { getRootProps, getInputProps, isDragActive, isDragReject, fileRejections } = useDropzone({
+    multiple: false,
+    disabled,
+    accept: { 'image/*': [] },
+    ...other,
+  });
+
+  const hasFile = !!value;
+
+  const hasError = isDragReject || !!error;
+
+  const [preview, setPreview] = useState('');
+
+  useEffect(() => {
+    if (typeof value === 'string') {
+      setPreview(value);
+    } else if (value instanceof File) {
+      setPreview(URL.createObjectURL(value));
     }
-  };
+  }, [value]);
 
-  const handleDrop = (event) => {
-    event.preventDefault();
-    setDragOver(false);
-    const file = event.dataTransfer.files[0];
-    handleFileUpload(file);
-  };
+  const renderPreview = hasFile && (
+    <Image alt="avatar" src={preview} sx={{ width: 1, height: 1, borderRadius: '50%' }} />
+  );
 
-  const handleDragOver = (event) => {
-    event.preventDefault();
-    setDragOver(true);
-  };
-
-  const handleDragLeave = () => setDragOver(false);
-
-  return (
+  const renderPlaceholder = (
     <Box
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
+      className="upload-placeholder"
       sx={{
-        width: 200,
-        height: 200,
-        border: `2px dashed ${dragOver ? '#00f' : '#ccc'}`,
-        borderRadius: '50%',
-        overflow: 'hidden',
-        position: 'relative',
+        top: 0,
+        gap: 1,
+        left: 0,
+        width: 1,
+        height: 1,
+        zIndex: 9,
         display: 'flex',
+        borderRadius: '50%',
+        position: 'absolute',
         alignItems: 'center',
+        color: 'text.disabled',
+        flexDirection: 'column',
         justifyContent: 'center',
-        bgcolor: dragOver ? '#f0f8ff' : '#fff',
-        ...sx,
+        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+        transition: (theme) =>
+          theme.transitions.create(['opacity'], { duration: theme.transitions.duration.shorter }),
+        '&:hover': { opacity: 0.72 },
+        ...(hasError && {
+          color: 'error.main',
+          bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.08),
+        }),
+        ...(hasFile && {
+          zIndex: 9,
+          opacity: 0,
+          color: 'common.white',
+          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['900Channel'], 0.64),
+        }),
       }}
     >
-      {uploadedImage ? (
-        <Stage width={200} height={200}>
-          <Layer>
-            <KonvaImage
-              image={uploadedImage}
-              x={0}
-              y={0}
-              width={200}
-              height={200}
-              clipFunc={(ctx) => {
-                ctx.arc(100, 100, 100, 0, Math.PI * 2, false);
-              }}
-            />
-            <Circle x={100} y={100} radius={100} stroke="black" strokeWidth={2} />
-          </Layer>
-        </Stage>
-      ) : (
-        <Box sx={{ textAlign: 'center', color: 'text.secondary' }}>
-          <Iconify icon="eva:person-outline" width={48} />
-          <Typography variant="body2">{placeholder}</Typography>
-        </Box>
-      )}
+      <Iconify icon="solar:camera-add-bold" width={32} />
+
+      <Typography variant="caption">{hasFile ? 'Update photo' : 'Upload photo'}</Typography>
+    </Box>
+  );
+
+  const renderContent = (
+    <Box
+      sx={{
+        width: 1,
+        height: 1,
+        overflow: 'hidden',
+        borderRadius: '50%',
+        position: 'relative',
+      }}
+    >
+      {renderPreview}
+      {renderPlaceholder}
+    </Box>
+  );
+
+  return (
+    <>
       <Box
+        {...getRootProps()}
         sx={{
-          position: 'absolute',
-          bottom: 10,
-          width: '100%',
-          textAlign: 'center',
+          p: 1,
+          m: 'auto',
+          width: 144,
+          height: 144,
+          cursor: 'pointer',
+          overflow: 'hidden',
+          borderRadius: '50%',
+          border: (theme) => `1px dashed ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
+          ...(isDragActive && { opacity: 0.72 }),
+          ...(disabled && { opacity: 0.48, pointerEvents: 'none' }),
+          ...(hasError && { borderColor: 'error.main' }),
+          ...(hasFile && {
+            ...(hasError && {
+              bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.08),
+            }),
+            '&:hover .upload-placeholder': { opacity: 1 },
+          }),
+          ...sx,
         }}
       >
-        <input
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          id="upload-avatar-input"
-          onChange={(e) => handleFileUpload(e.target.files[0])}
-        />
-        <label htmlFor="upload-avatar-input">
-          <Button variant="contained" component="span">
-            Upload
-          </Button>
-        </label>
+        <input {...getInputProps()} />
+
+        {renderContent}
       </Box>
-    </Box>
+
+      {helperText && helperText}
+
+      <RejectionFiles files={fileRejections} />
+    </>
   );
 }

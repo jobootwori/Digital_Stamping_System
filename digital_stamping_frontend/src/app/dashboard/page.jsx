@@ -1,74 +1,46 @@
 "use client";
 
-import { useState } from 'react';
 import { CONFIG } from 'src/config-global';
-
-import { BlankView } from 'src/sections/blank/view';
-import { Upload } from 'src/components/upload';
-import { UploadAvatar } from 'src/components/upload-avatar';
+import { Upload } from 'src/components/upload/upload'; // Import the main upload component
+import { UploadBox } from 'src/components/upload/upload-box'; // Import UploadBox
+import { UploadAvatar } from 'src/components/upload/upload-avatar'; // Import UploadAvatar
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 
 // ----------------------------------------------------------------------
 
 // export const metadata = { title: `Dashboard - ${CONFIG.site.name}` };
 
-// export default function Page() {
-//    const [uploadedFiles, setUploadedFiles] = useState([]);
-
-//    const handleFileUpload = (acceptedFiles) => {
-//     setUploadedFiles((prevFiles) => [...prevFiles, ...acceptedFiles]);
-//     console.log('Uploaded files:', acceptedFiles);
-//   };
-
-//   const handleFileRemove = (file) => {
-//     setUploadedFiles((prevFiles) => prevFiles.filter((f) => f !== file));
-//   };
-
-//   const handleRemoveAll = () => {
-//     setUploadedFiles([]);
-//   };
-
-//   const handleUpload = async () => {
-//     const formData = new FormData();
-//     uploadedFiles.forEach((file) => formData.append('files', file));
-
-//     try {
-//       const response = await axios.post('/api/upload/', formData, {
-//         headers: { 'Content-Type': 'multipart/form-data' },
-//       });
-//       console.log('Upload successful:', response.data);
-//     } catch (error) {
-//       console.error('Error uploading files:', error);
-//     }
-//   };
-//   // Logic to upload files to the server, e.g., using axios
-//   console.log('Uploading files to the server:', uploadedFiles);
-
-//   return (
-//     <div>
-//       <h1>Dashboard</h1>
-//       <Upload
-//         multiple
-//         value={uploadedFiles}
-//         onDrop={handleFileUpload}
-//         onRemove={handleFileRemove}
-//         onRemoveAll={handleRemoveAll}
-//         onUpload={handleUpload}
-//         // helperText="Drag and drop files here or click to select files."
-//       />
-//     </div>
-//   );
-// }
-export default function Dashboard() {
+export default function Page() {
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Dashboard</h1>
-      <p>Upload your documents and avatar below:</p>
-      
-      <h2>Upload Avatar</h2>
-      <UploadAvatar sx={{ marginBottom: '20px' }} />
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h4" sx={{ mb: 4 }}>
+        Document and Image Upload
+      </Typography>
 
-      <h2>Upload Files</h2>
-      <Upload placeholder="Drag and drop files or click to upload documents and images." />
-    </div>
+      {/* Display the UploadAvatar for single uploads */}
+      {/* <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Upload a Profile Image or Single File
+        </Typography>
+        <UploadAvatar />
+      </Box> */}
+
+      {/* Display the UploadBox for compact file uploads */}
+      {/* <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Quick Upload Box
+        </Typography>
+        <UploadBox placeholder="Drag and drop files or click to upload" />
+      </Box> */}
+
+      {/* Display the Upload component for managing multiple files */}
+      <Box>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Upload and Manage Multiple Files
+        </Typography>
+        <Upload />
+      </Box>
+    </Box>
   );
 }

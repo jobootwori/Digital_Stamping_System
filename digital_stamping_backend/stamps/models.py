@@ -54,4 +54,12 @@ class Stamp(models.Model):
     shape = models.CharField(max_length=50, choices=[('circle', 'Circle'), ('rectangle', 'Rectangle')])
     color = models.CharField(max_length=7, default='#000000')  # Hex color code
     text = models.CharField(max_length=200, blank=True)
+    sub_text = models.CharField(max_length=200, blank=True)
     logo = models.ImageField(upload_to='logos/', blank=True, null=True)
+    text_color = models.CharField(max_length=7, default='#000000')
+    size = models.IntegerField(null=True, blank=True)
+    x = models.IntegerField(null=True, blank=True)
+    y = models.IntegerField(null=True, blank=True)
+   
+    def __str__(self):
+        return f"{self.text} ({self.shape})"  # Return the text and shape of the stamp
