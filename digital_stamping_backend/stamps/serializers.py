@@ -19,7 +19,13 @@ class StampSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Get the current user from the request
         request = self.context.get('request')
-        validated_data['user'] = request.user  # Automatically associate the logged-in user
+        user = request.user
+
+        # Ensure OTP verification before stamp creation
+        if not user.otp_verified:
+            raise serializers.ValidationError({"otp": "User must complete OTP verification to create stamps."})
+
+        validated_data['user'] = user  # Automatically associate the logged-in user
         return super().create(validated_data)
 
 # User = get_user_model()
@@ -58,8 +64,29 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
+            is_verified=False  # User needs to verify email first
         )
+
+        # Generate email verification token
+        user.verification_token = user.verification_token
+        user.save()
+
+        
         return user
+
+class EmailVerificationSerializer(serializers.Serializer):
+    token = serializers.UUIDField()
+
+    def validate_token(self, value):
+        try:
+            user = CustomUser.objects.get(verification_token=value)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError("Invalid verification token.")
+        
+        return value
+
+class OTPVerificationSerializer(serializers.Serializer):
+    otp_verified = serializers.BooleanField()
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
