@@ -100,10 +100,15 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=email, password=password)
         if not user:
             raise serializers.ValidationError("Invalid email or password.")
+
+        if not user.is_verified:
+            raise serializers.ValidationError("Email not verified. Please verify before logging in.")
+
         attrs['user'] = user
         return attrs
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model =CustomUser
-        fields = ('id', 'first_name', 'last_name', 'email')
+        fields = ('id', 'first_name', 'last_name', 'email', 'is_verified', 'otp_verified')
+
