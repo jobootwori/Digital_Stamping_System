@@ -38,6 +38,7 @@
     "@react-pdf/renderer": "^4.1.6",
     "autosuggest-highlight": "^3.3.4",
     "axios": "^1.7.9",
+    "canvas": "^3.1.0",
     "dayjs": "^1.11.11",
     "fabric": "^6.5.4",
     "framer-motion": "^11.2.10",
@@ -46,9 +47,9 @@
     "i18next-resources-to-backend": "^1.2.1",
     "jspdf": "^2.5.2",
     "konva": "^9.3.18",
-    "next": "^14.2.4",
+    "next": "^14.2.23",
     "nprogress": "^0.2.0",
-    "pdfjs-dist": "^2.16.105",
+    "pdfjs-dist": "^4.10.38",
     "react": "^18.3.1",
     "react-color": "^2.19.3",
     "react-dom": "^18.3.1",
@@ -61,6 +62,7 @@
     "sonner": "^1.7.2",
     "stylis": "^4.3.2",
     "stylis-plugin-rtl": "^2.1.1",
+    "uuid": "^11.0.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {

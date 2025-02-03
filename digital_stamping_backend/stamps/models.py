@@ -12,6 +12,12 @@ class CustomUserManager(BaseUserManager):
         user = self.model(email=email, **extra_fields)
         user.password = make_password(password)
         user.save(using=self._db)
+
+        # Assign a default group based on user type
+        default_group_name = "Individual" if extra_fields.get("is_staff") is False else "Company"
+        group, created = Group.objects.get_or_create(name=default_group_name)
+        user.groups.add(group)
+
         return user
 
    def create_user(self, email, password, **extra_fields):
@@ -43,6 +49,11 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+    def get_user_group(self):
+        """Returns the first group name assigned to the user."""
+        return self.groups.first().name if self.groups.exists() else None
+
 
 class Document(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
