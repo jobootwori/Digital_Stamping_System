@@ -60,6 +60,9 @@ export const signUp = async ({ email, password, firstName, lastName }) => {
 export const signOut = async () => {
   try {
     await setSession(null);
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    window.location.href = '/auth/jwt/sign-in'; // Redirect to login page
   } catch (error) {
     console.error('Error during sign out:', error);
     throw error;
