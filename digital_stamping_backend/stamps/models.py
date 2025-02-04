@@ -2,10 +2,12 @@
 
 # Create your models here.
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import AbstractUser, BaseUserManager, Group
 from django.contrib.auth.hashers import make_password
 from django.conf import settings  # Import settings to use AUTH_USER_MODEL
 import uuid
+import random
 
 class CustomUserManager(BaseUserManager):
    def _create_user(self, email, password, **extra_fields):
@@ -37,16 +39,28 @@ class CustomUserManager(BaseUserManager):
 
       return self._create_user(email, password, **extra_fields)
 
+# def generate_uuid():
+#     return str(uuid.uuid4())
+
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     username = None
 
-    # Fields for verification and OTP tracking
-    is_verified = models.BooleanField(default=False)  # Email verification status
-    otp_verified = models.BooleanField(default=False)  # OTP step verification
-    verification_token = models.UUIDField(default=uuid.uuid4, unique=True)  # Unique token for email verification
+    def default_verification_expires():
+        return timezone.now() + timezone.timedelta(days=1)
+
+     # Email Verification Fields
+    is_verified = models.BooleanField(default=False)
+    verification_token = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    verification_expires_at = models.DateTimeField(default=timezone.now() + timezone.timedelta(days=1))
+
+    # OTP Verification Fields
+    otp_code = models.CharField(max_length=6, blank=True, null=True)
+    otp_expires_at = models.DateTimeField(blank=True, null=True)
+    otp_verified = models.BooleanField(default=False)
+
 
     USERNAME_FIELD = 'email' # Use email as the username field
     REQUIRED_FIELDS = ['first_name', 'last_name']  # Do not include 'email' here
@@ -59,7 +73,33 @@ class CustomUser(AbstractUser):
     def get_user_group(self):
         """Returns the first group name assigned to the user."""
         return self.groups.first().name if self.groups.exists() else None
+    
+    def is_company(self):
+        """Check if the user belongs to the Company group."""
+        return self.get_user_group() == "Company"
 
+    def generate_otp(self):
+        """Generate a 6-digit OTP and set expiration (10 minutes)."""
+        self.otp_code = str(random.randint(100000, 999999))
+        self.otp_expires_at = timezone.now() + timezone.timedelta(minutes=10)
+        self.save()
+        return self.otp_code
+
+    def verify_otp(self, otp):
+        """Validate OTP before granting verification."""
+        if not self.otp_expires_at or timezone.now() > self.otp_expires_at:
+            self.otp_code = None  # Clear expired OTP
+            self.otp_expires_at = None
+            self.save()
+            return False  
+
+        if self.otp_code == otp:
+            self.otp_verified = True
+            self.otp_code = None
+            self.otp_expires_at = None
+            self.save()
+            return True
+        return False
 
 class Document(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

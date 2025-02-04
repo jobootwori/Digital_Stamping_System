@@ -139,6 +139,17 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Change this if using another provider
+EMAIL_PORT = 587  # Use 465 for SSL, 587 for TLS
+EMAIL_USE_TLS = True  # Change to False if using SSL (465)
+EMAIL_USE_SSL = False  # Use True for SSL (465)
+EMAIL_HOST_USER = 'jobootwori@gmail.com'  # Your email address
+EMAIL_HOST_PASSWORD = 'jkfp zgok gazm nhoc'  # Use an App Password, NOT your real password
+DEFAULT_FROM_EMAIL = 'jobootwori@gmail.com'
+
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3033",  # Your frontend's URL
     "http://127.0.0.1:8000", # For compatibility

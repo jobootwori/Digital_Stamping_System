@@ -1,9 +1,12 @@
 from rest_framework import serializers
 from .models import Document, Stamp, CustomUser
 from rest_framework import serializers
+from django.utils import timezone
 from django.contrib.auth import get_user_model,authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+import random
 
 class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -57,7 +60,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         # Remove password and password2 from validated_data before creating user
         validated_data.pop('password2', None)
-
+       
         # Create user with validated_data
         user = CustomUser.objects.create_user(
             email=validated_data['email'],
@@ -67,11 +70,20 @@ class RegisterSerializer(serializers.ModelSerializer):
             is_verified=False  # User needs to verify email first
         )
 
-        # Generate email verification token
-        user.verification_token = user.verification_token
-        user.save()
+        # # Generate and store email verification otp
+        # otp_code = str(random.randint(100000, 999999))  # 6-digit OTP
+        # user.otp_code = otp_code  # Store OTP in the user model
+        # user.otp_created_at = timezone.now()
+        # user.save()
 
-        
+        # # Send otp verification email
+        # send_mail(
+        #     "Verify Your Email",
+        #     f"Your OTP is {otp_code}. It will expire in 10 minutes.",
+        #     "noreply@gmail.com",
+        #     [user.email],
+        #     fail_silently=False,
+        # )
         return user
 
 class EmailVerificationSerializer(serializers.Serializer):
@@ -85,8 +97,12 @@ class EmailVerificationSerializer(serializers.Serializer):
         
         return value
 
+class OTPRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
 class OTPVerificationSerializer(serializers.Serializer):
-    otp_verified = serializers.BooleanField()
+    # email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=6)
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)

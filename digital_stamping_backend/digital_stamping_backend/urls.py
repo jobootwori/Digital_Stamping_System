@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from stamps.views import RegisterView, UserDetailView, DocumentUploadView, StampListView, StampCreateView
+from stamps.views import RegisterView, UserDetailView, DocumentUploadView, StampListView, StampCreateView, VerifyOTPView, RequestOTPView
 from django.views.generic import RedirectView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -29,5 +29,7 @@ urlpatterns = [
     path('stamps/create/', StampCreateView.as_view(), name='stamp-create'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # Login
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh Token
+    path('verify-otp/', VerifyOTPView.as_view(), name='verify-otp'),
+    path('request-otp/', RequestOTPView.as_view(), name='request-otp'),
     path('', RedirectView.as_view(url='register/')),  # Redirect root to 'register/'
 ]
