@@ -134,6 +134,9 @@ class StampCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        if not request.user.is_verified:
+            return Response({"error": "You must verify your email before creating stamps."}, status=status.HTTP_400_BAD_REQUEST)
+
         if not request.user.otp_verified:
             return Response({"error": "User must complete OTP verification to create stamps."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -155,10 +158,16 @@ class StampListView(APIView):
 User = get_user_model()
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data['user']
+
+            if not user.is_verified:
+                return Response({"error": "Email is not verified. Please verify your email first."}, status=status.HTTP_400_BAD_REQUEST)         
+            
             refresh = RefreshToken.for_user(user)
             return Response({
                 "refresh": str(refresh),

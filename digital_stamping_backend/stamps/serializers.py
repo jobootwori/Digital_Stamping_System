@@ -117,6 +117,9 @@ class LoginSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError("Invalid email or password.")
 
+        # DEBUGGING: Print verification status
+        print(f"Login attempt - Email: {email}, Verified: {user.is_verified}")
+
         if not user.is_verified:
             raise serializers.ValidationError("Email not verified. Please verify before logging in.")
 

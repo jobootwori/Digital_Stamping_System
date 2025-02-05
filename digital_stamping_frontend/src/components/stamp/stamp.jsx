@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ChromePicker } from 'react-color';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Stage, Layer, Text, Circle, Path } from 'react-konva';
 
 import Box from '@mui/material/Box';
@@ -26,6 +26,10 @@ const Stamp = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [savedStamps, setSavedStamps] = useState([]);
+  const router = useRouter();
+  const [isVerified, setIsVerified] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  
 
   const width = 400;
   const height = 400;
@@ -95,6 +99,19 @@ const Stamp = () => {
   useEffect(() => {
     fetchSavedStamps();
   }, []);
+
+  if (!isVerified || !isOtpVerified) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {errorMessage || 'You must verify your email and complete OTP verification to create a stamp.'}
+        </Alert>
+        <Button variant="contained" onClick={() => router.push('/verify-otp')}>
+          Verify Now
+        </Button>
+      </Box>
+    );
+  }
 
   const handleClear = () => {
     setText('PAID');
