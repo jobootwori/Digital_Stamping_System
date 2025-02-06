@@ -160,5 +160,5 @@ We welcome contributions! Feel free to submit a **pull request** or open an **is
 ---
 
 ## 📧 Contact
-For any inquiries, reach out at: **your-email@example.com**
+For any inquiries, reach out at: **jobootwori@gmail.com**
 
