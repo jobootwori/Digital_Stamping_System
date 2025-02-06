@@ -144,13 +144,7 @@ The frontend should be running at: **`http://localhost:3033`**
 
 ## 📌 Future Enhancements
 🚀 **Allow multiple stamp templates**
-🚀 **Support for PDF & image stamping**
 🚀 **Mobile app integration**
-
----
-
-## 📜 License
-This project is **open-source** and available under the **MIT License**.
 
 ---
 
