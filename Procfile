@@ -1,1 +1,1 @@
-web: gunicorn digital_stamping_backend.digital_stamping_backend.wsgi --log-file -
+web: gunicorn digital_stamping_backend.wsgi --log-file -
