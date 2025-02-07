@@ -1,7 +1,7 @@
 "use client";
 
 import { CONFIG } from "src/config-global";
-import Stamp from "src/components/stamp/Stamp";
+import { Stamp } from "src/components/stamp/stamp";
 
 // ----------------------------------------------------------------------
 
