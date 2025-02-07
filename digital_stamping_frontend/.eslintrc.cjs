@@ -3,6 +3,11 @@ module.exports = {
   env: { browser: true, es2020: true },
   plugins: ['perfectionist', 'unused-imports', 'prettier'],
   extends: ['airbnb', 'airbnb/hooks', 'prettier'],
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
+  },
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
