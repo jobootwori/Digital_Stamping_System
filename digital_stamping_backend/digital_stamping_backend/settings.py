@@ -146,6 +146,6 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3033",  # Your frontend's URL
     "http://127.0.0.1:8000", # For c
-    "http://127.0.0.1"
+    "http://127.0.0.1",
     "http://digital-stamping-system-backen.herokuapp.com" # My backend host url
 ]
