@@ -1,1 +1,1 @@
-web: gunicorn digital_stamping_backend.wsgi --log-file -
+web: python manage.py runserver %PORT%

@@ -149,3 +149,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
     "http://digital-stamping-system-backen.herokuapp.com", # My backend host url
 ]
+
+# Configure Django App for Heroku.
+   import django_heroku
+   django_heroku.settings(locals())
