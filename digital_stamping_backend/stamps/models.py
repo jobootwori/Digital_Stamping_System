@@ -2,7 +2,7 @@
 
 # Create your models here.
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, Group
 from django.contrib.auth.hashers import make_password
 from django.conf import settings  # Import settings to use AUTH_USER_MODEL
 
