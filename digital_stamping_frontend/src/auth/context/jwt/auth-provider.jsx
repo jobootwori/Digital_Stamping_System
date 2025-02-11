@@ -6,7 +6,6 @@ import { useSetState } from 'src/hooks/use-set-state';
 
 import axios, { endpoints } from 'src/utils/axios';
 
-import { STORAGE_KEY } from './constant';
 import { AuthContext } from '../auth-context';
 import { setSession, isValidToken } from './utils';
 
@@ -20,7 +19,7 @@ export function AuthProvider({ children }) {
 
   const checkUserSession = useCallback(async () => {
     try {
-      const accessToken = sessionStorage.getItem(STORAGE_KEY);
+      const accessToken = localStorage.getItem('accessToken'); // Directly fetch accessToken from localStorage
 
       if (accessToken && isValidToken(accessToken)) {
         setSession(accessToken);
@@ -68,3 +67,4 @@ export function AuthProvider({ children }) {
 
   return <AuthContext.Provider value={memoizedValue}>{children}</AuthContext.Provider>;
 }
+

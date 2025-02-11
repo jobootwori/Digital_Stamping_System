@@ -2,7 +2,7 @@
 
 # Create your models here.
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, Group
 from django.contrib.auth.hashers import make_password
 from django.conf import settings  # Import settings to use AUTH_USER_MODEL
 
@@ -12,6 +12,12 @@ class CustomUserManager(BaseUserManager):
         user = self.model(email=email, **extra_fields)
         user.password = make_password(password)
         user.save(using=self._db)
+
+        # Assign a default group based on user type
+        default_group_name = "Individual" if extra_fields.get("is_staff") is False else "Company"
+        group, created = Group.objects.get_or_create(name=default_group_name)
+        user.groups.add(group)
+
         return user
 
    def create_user(self, email, password, **extra_fields):
@@ -44,6 +50,11 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
 
+    def get_user_group(self):
+        """Returns the first group name assigned to the user."""
+        return self.groups.first().name if self.groups.exists() else None
+
+
 class Document(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     file = models.FileField(upload_to='documents/')
@@ -54,4 +65,12 @@ class Stamp(models.Model):
     shape = models.CharField(max_length=50, choices=[('circle', 'Circle'), ('rectangle', 'Rectangle')])
     color = models.CharField(max_length=7, default='#000000')  # Hex color code
     text = models.CharField(max_length=200, blank=True)
+    sub_text = models.CharField(max_length=200, blank=True)
     logo = models.ImageField(upload_to='logos/', blank=True, null=True)
+    text_color = models.CharField(max_length=7, default='#000000')
+    size = models.IntegerField(null=True, blank=True)
+    x = models.IntegerField(null=True, blank=True)
+    y = models.IntegerField(null=True, blank=True)
+   
+    def __str__(self):
+        return f"{self.text} ({self.shape})"  # Return the text and shape of the stamp
