@@ -88,7 +88,7 @@ export function Upload() {
       });
       if (response.status === 200) {
         setMyStamps(response.data);
-        console.log(response.data)
+        console.log(response.data);
       }
     } catch (error) {
       console.error('Error fetching saved stamps:', error);
@@ -126,8 +126,8 @@ export function Upload() {
   const renderStamps = () =>
     stamps.map((stamp) => {
       const fontSizeMain = (stamp.size || 50) * 0.3; // Dynamic font size for main text
-    const fontSizeSub = (stamp.size || 50) * 0.2; // Dynamic font size for subtext
-    const totalTextHeight = fontSizeMain + fontSizeSub; // Total height of both texts
+      const fontSizeSub = (stamp.size || 50) * 0.2; // Dynamic font size for subtext
+      const totalTextHeight = fontSizeMain + fontSizeSub; // Total height of both texts
       return (
         <Group
           key={stamp.id}
@@ -136,57 +136,58 @@ export function Upload() {
           y={stamp.y}
           onDragEnd={(e) => handleStampDragEnd(stamp.id, e)}
         >
-        {/* Render shape (circle or rectangle) */}
-      {stamp.shape === 'circle' && (
-        <Circle
-          x={50}
-          y={50}
-          radius={stamp.size || 50}
-          fill={stamp.color}
-          stroke={stamp.textColor || '#000000'}
-          strokeWidth={4}
-        />
-      )}
-      {stamp.shape === 'rectangle' && (
-        <Rect
-          x={0}
-          y={0}
-          width={stamp.size || 100}
-          height={stamp.size || 50}
-          fill={stamp.color}
-          stroke={stamp.textColor || '#000000'}
-          strokeWidth={4}
-          cornerRadius={5}
-        />
-      )}
+          {/* Render shape (circle or rectangle) */}
+          {stamp.shape === 'circle' && (
+            <Circle
+              x={50}
+              y={50}
+              radius={stamp.size || 50}
+              fill={stamp.color}
+              stroke={stamp.textColor || '#000000'}
+              strokeWidth={4}
+            />
+          )}
+          {stamp.shape === 'rectangle' && (
+            <Rect
+              x={0}
+              y={0}
+              width={stamp.size || 100}
+              height={stamp.size || 50}
+              fill={stamp.color}
+              stroke={stamp.textColor || '#000000'}
+              strokeWidth={4}
+              cornerRadius={5}
+            />
+          )}
 
-      {/* Render main text */}
-      <Text
-        x={-stamp.size / 2 || -50}
-        y={-totalTextHeight / 2}
-        text={stamp.text}
-        fontSize={fontSizeMain} // Scale font size based on stamp size
-        width={stamp.size * 2 || 100}
-        align="center"
-        verticalAlign="middle"
-        fill={stamp.textColor || '#ffffff'}
-      />
+          {/* Render main text */}
+          <Text
+            x={-stamp.size / 2 || -50}
+            y={-totalTextHeight / 2}
+            text={stamp.text}
+            fontSize={fontSizeMain} // Scale font size based on stamp size
+            width={stamp.size * 2 || 100}
+            align="center"
+            verticalAlign="middle"
+            fill={stamp.textColor || '#ffffff'}
+          />
 
-      {/* Render subtext */}
-      {stamp.subText && (
-        <Text
-          x={-stamp.size / 2 || -50}
-          y={fontSizeMain - totalTextHeight / 2}
-          text={stamp.subText}
-          fontSize={fontSizeSub} // Scale subtext font size
-          width={stamp.size * 2 || 100}
-          align="center"
-          verticalAlign="middle"
-          fill={stamp.textColor || '#ffffff'}
-        />
-      )}
-      </Group>
-    )});
+          {/* Render subtext */}
+          {stamp.subText && (
+            <Text
+              x={-stamp.size / 2 || -50}
+              y={fontSizeMain - totalTextHeight / 2}
+              text={stamp.subText}
+              fontSize={fontSizeSub} // Scale subtext font size
+              width={stamp.size * 2 || 100}
+              align="center"
+              verticalAlign="middle"
+              fill={stamp.textColor || '#ffffff'}
+            />
+          )}
+        </Group>
+      );
+    });
 
   // Add Stamp from "My Stamps" Library
   const addStampFromLibrary = (stamp) => {
@@ -216,6 +217,56 @@ export function Upload() {
     const pdf = new jsPDF('landscape', 'px', [800, 600]);
     pdf.addImage(uri, 'PNG', 0, 0, 800, 600);
     pdf.save('stamped-document.pdf');
+  };
+
+  // Helper: Convert data URL to Blob
+  const dataURLtoBlob = (dataurl) => {
+  const arr = dataurl.split(',');
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  if (!mimeMatch) {
+    throw new Error("Invalid data URL");
+  }
+  const mime = mimeMatch[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length; // Use 'let' because this variable will be modified
+  const u8arr = new Uint8Array(n);
+  
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  
+  return new Blob([u8arr], { type: mime });
+};
+  // Save canvas to database
+  const saveCanvasToDatabase = async () => {
+    try {
+      const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+      const blob = dataURLtoBlob(uri);
+      const formData = new FormData();
+      formData.append('file', blob, 'stamped-document.png');
+
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        alert('User not logged in.');
+        return;
+      }
+
+      const response = await axios.post(`${SERVER_URL}/document/save/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 201) {
+        alert('Document saved to database successfully!');
+      } else {
+        alert('Failed to save document.');
+      }
+    } catch (error) {
+      console.error('Error saving document:', error);
+      alert('An error occurred while saving the document.');
+    }
   };
 
   return (
@@ -387,6 +438,9 @@ export function Upload() {
         </Button>
         <Button variant="contained" onClick={downloadCanvasAsPDF}>
           Download as PDF
+        </Button>
+        <Button variant="contained" onClick={saveCanvasToDatabase}>
+          Save to Database
         </Button>
       </Stack>
     </Box>
