@@ -19,8 +19,12 @@ class DocumentUploadView(APIView):
     def post(self, request):
         serializer = DocumentSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+           document = serializer.save(user=request.user)
+            return Response({
+                "message": "Document uploaded successfully!",
+                "serial_number": document.serial_number,
+                "qr_code": request.build_absolute_uri(document.qr_code.url),
+            }, status=status.HTTP_201_CREATED) 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class DocumentSaveView(APIView):

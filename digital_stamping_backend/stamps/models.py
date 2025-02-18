@@ -1,6 +1,10 @@
 
 
 # Create your models here.
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager, Group
 from django.contrib.auth.hashers import make_password
@@ -59,6 +63,30 @@ class Document(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     file = models.FileField(upload_to='documents/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    serial_number = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+
+    def generate_serial_number(self):
+        """Generate a unique serial number"""
+        self.serial_number = str(uuid.uuid4().hex[:10]).upper()
+
+    def generate_qr_code(self):
+        """Generate a QR code containing document metadata and verification link"""
+        if not self.serial_number:
+            self.generate_serial_number()
+
+        verification_url = f"https://your-domain.com/verify/{self.serial_number}"
+        qr = qrcode.make(verification_url)
+
+        buffer = BytesIO()
+        qr.save(buffer, format="PNG")
+        self.qr_code.save(f"{self.serial_number}.png", ContentFile(buffer.getvalue()), save=False)
+    
+    def save(self, *args, **kwargs):
+        if not self.serial_number:
+            self.generate_serial_number()
+        self.generate_qr_code()
+        super().save(*args, **kwargs)
 
 class Stamp(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
