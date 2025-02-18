@@ -69,12 +69,14 @@ export default function ViewDocuments() {
           // Determine if the file is an image based on its extension.
           const isImage = doc.file.match(/\.(jpg|jpeg|png|gif)$/i);
           const iconUrl = isImage
-            ? '/public/assets/icons/files/ic-img.svg'
-            : '/public/assets/icons/files/ic-file.svg';
+            ? '/assets/icons/files/ic-img.svg'
+            : '/assets/icons/files/ic-file.svg';
 
           return (
             <ListItem key={doc.id} divider>
-              <ListItemIcon>{icon}</ListItemIcon>
+              <ListItemIcon>
+                <img src={iconUrl} alt={isImage ? 'Image Icon' : 'File Icon'} width={40} height={40} />
+              </ListItemIcon>
               <ListItemText
                 primary={`Document ${doc.id}`}
                 secondary={`Uploaded: ${new Date(doc.uploaded_at).toLocaleString()}`}
