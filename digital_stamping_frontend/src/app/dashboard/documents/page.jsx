@@ -1,12 +1,14 @@
+'use client';
 import { CONFIG } from 'src/config-global';
 
-import { BlankView } from 'src/sections/blank/view';
+import ViewDocuments from 'src/components/viewDocuments/ViewDocuments';
+
 
 // ----------------------------------------------------------------------
 
-export const metadata = { title: `My Documents | Dashboard - ${CONFIG.site.name}` };
+// export const metadata = { title: `My Documents | Dashboard - ${CONFIG.site.name}` };
 
 export default function Page() {
-  return <BlankView title="My Documents" />;
+  return <ViewDocuments />;
   
 }

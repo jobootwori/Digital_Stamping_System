@@ -9,6 +9,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = '__all__'
+        read_only_fields = ('user',)
 
 class StampSerializer(serializers.ModelSerializer):
     class Meta:

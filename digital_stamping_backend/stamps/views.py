@@ -23,6 +23,23 @@ class DocumentUploadView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class DocumentSaveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = DocumentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class DocumentListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        documents = Document.objects.filter(user=request.user)
+        serializer = DocumentSerializer(documents, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class StampCreateView(APIView):
     permission_classes = [IsAuthenticated]
