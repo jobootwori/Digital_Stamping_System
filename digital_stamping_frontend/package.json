@@ -13,7 +13,6 @@
     "fm:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
     "fm:fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "rm:all": "rm -rf node_modules .next out dist build",
-    
     "re:build-npm": "npm run rm:all && npm install && npm run build",
     "start:out": "npx serve@latest out -p 3033"
   },

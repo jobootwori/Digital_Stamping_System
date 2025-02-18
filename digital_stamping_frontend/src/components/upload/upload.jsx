@@ -9,12 +9,16 @@ import Slider from '@mui/material/Slider';
 import { ChromePicker } from 'react-color';
 import * as pdfjsLib from 'pdfjs-dist';
 import { jsPDF } from 'jspdf';
+
+// import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs';
+// pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
 // import { PDFDocument } from 'pdf-lib';
 
 // const pdf = await PDFDocument.load(pdfBytes);
 // const page = await pdf.getPage(pageNum);
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -30,6 +34,7 @@ export function Upload() {
   const [myStamps, setMyStamps] = useState([]);
   const [stampColor, setStampColor] = useState('#ff0000');
   const [stampText, setStampText] = useState('My Stamp');
+  const [fileType, setFileType] = useState('');
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -38,10 +43,12 @@ export function Upload() {
     const reader = new FileReader();
     reader.onload = () => {
       if (file.type.startsWith('image/')) {
+        setFileType('image');
         const img = new window.Image();
         img.src = reader.result;
         img.onload = () => setImages([img]);
       } else if (file.type === 'application/pdf') {
+        setFileType('pdf');
         loadPdf(reader.result);
       }
     };
@@ -51,6 +58,7 @@ export function Upload() {
   const loadPdf = async (pdfData) => {
     const loadedPdf = await pdfjsLib.getDocument(pdfData).promise;
     setPdf(loadedPdf);
+    setTotalPages(loadedPdf.numPages);
     renderPdfPage(loadedPdf, 1);
   };
 
@@ -221,35 +229,83 @@ export function Upload() {
 
   // Helper: Convert data URL to Blob
   const dataURLtoBlob = (dataurl) => {
-  const arr = dataurl.split(',');
-  const mimeMatch = arr[0].match(/:(.*?);/);
-  if (!mimeMatch) {
-    throw new Error("Invalid data URL");
-  }
-  const mime = mimeMatch[1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length; // Use 'let' because this variable will be modified
-  const u8arr = new Uint8Array(n);
-  
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  
-  return new Blob([u8arr], { type: mime });
-};
+    const arr = dataurl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    if (!mimeMatch) {
+      throw new Error('Invalid data URL');
+    }
+    const mime = mimeMatch[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+
+    return new Blob([u8arr], { type: mime });
+  };
   // Save canvas to database
   const saveCanvasToDatabase = async () => {
     try {
-      const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
-      const blob = dataURLtoBlob(uri);
-      const formData = new FormData();
-      formData.append('file', blob, 'stamped-document.png');
-
       const token = localStorage.getItem('accessToken');
       if (!token) {
         alert('User not logged in.');
         return;
       }
+
+      if (!fileType) {
+        console.error('No valid file type detected.');
+        alert('No valid file type detected.');
+        return;
+      }
+
+      let file;
+      let filename;
+      if (fileType === 'image') {
+        console.log('Processing Image File...');
+        // Save canvas as image
+        const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+        console.log('Generated Data URL:', uri.slice(0, 50)); // Print only first 50 chars
+        file = dataURLtoBlob(uri);
+        filename = 'stamped-document.png';
+      } else if (
+        fileType === 'pdf' ||
+        file.type === 'application/x-pdf' ||
+        file.name.toLowerCase().endsWith('.pdf')
+      ) {
+        //
+        // Here, we'll save the canvas as a PDF:
+        console.log('Processing PDF File...');
+        const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+        console.log('Generated Data URL:', uri.slice(0, 50)); // Debugging Data URL
+
+        const pdfDoc = new jsPDF('landscape', 'px', [800, 600]);
+        pdfDoc.addImage(uri, 'PNG', 0, 0, 800, 600);
+        const pdfBlob = pdfDoc.output('blob');
+        file = pdfBlob;
+        filename = 'stamped-document.pdf';
+      } else {
+        console.error('Invalid file type:', fileType);
+        alert('No valid file type detected.');
+        return;
+      }
+
+      // Debugging: Ensure file is not undefined
+    if (!file) {
+      console.error('File creation failed:', { fileType, file });
+      alert('Error: Failed to create file.');
+      return;
+    }
+
+    console.log('File Type:', fileType);
+    console.log('Generated File:', file);
+
+      const formData = new FormData();
+      // const filename = fileType === 'image' ? 'stamped-document.png' : 'stamped-document.pdf';
+      formData.append('file', file, filename);
+
+      console.log('Sending FormData:', formData);
 
       const response = await axios.post(`${SERVER_URL}/document/save/`, formData, {
         headers: {
@@ -261,6 +317,7 @@ export function Upload() {
       if (response.status === 201) {
         alert('Document saved to database successfully!');
       } else {
+        console.error('Failed to save document:', response);
         alert('Failed to save document.');
       }
     } catch (error) {
