@@ -1,4 +1,5 @@
 import axios from 'axios';
+import QRCode from 'qrcode.react';
 import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Image as KonvaImage, Rect, Circle, Text, Group } from 'react-konva';
 import Box from '@mui/material/Box';
@@ -35,6 +36,8 @@ export function Upload() {
   const [stampColor, setStampColor] = useState('#ff0000');
   const [stampText, setStampText] = useState('My Stamp');
   const [fileType, setFileType] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -245,6 +248,7 @@ export function Upload() {
 
     return new Blob([u8arr], { type: mime });
   };
+
   // Save canvas to database
   const saveCanvasToDatabase = async () => {
     try {
@@ -285,6 +289,9 @@ export function Upload() {
         const pdfBlob = pdfDoc.output('blob');
         file = pdfBlob;
         filename = 'stamped-document.pdf';
+
+        setSerialNumber(response.data.serial_number);
+        setQrCodeUrl(response.data.qr_code);
       } else {
         console.error('Invalid file type:', fileType);
         alert('No valid file type detected.');
@@ -292,14 +299,14 @@ export function Upload() {
       }
 
       // Debugging: Ensure file is not undefined
-    if (!file) {
-      console.error('File creation failed:', { fileType, file });
-      alert('Error: Failed to create file.');
-      return;
-    }
+      if (!file) {
+        console.error('File creation failed:', { fileType, file });
+        alert('Error: Failed to create file.');
+        return;
+      }
 
-    console.log('File Type:', fileType);
-    console.log('Generated File:', file);
+      console.log('File Type:', fileType);
+      console.log('Generated File:', file);
 
       const formData = new FormData();
       // const filename = fileType === 'image' ? 'stamped-document.png' : 'stamped-document.pdf';
@@ -486,6 +493,14 @@ export function Upload() {
             //   {stamp.text}
             // </Button>
           ))}
+          {/* // Render QR Code and Serial Number */}
+          {serialNumber && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6">Serial Number: {serialNumber}</Typography>
+              <QRCode value={`https://your-domain.com/verify/${serialNumber}`} size={150} />
+            </Box>
+          )}
+          
         </Stack>
       </Box>
 
