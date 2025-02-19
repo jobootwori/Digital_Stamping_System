@@ -1,5 +1,5 @@
 import axios from 'axios';
-import QRCode from 'qrcode.react';
+import { QRCode } from 'qrcode.react';
 import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Image as KonvaImage, Rect, Circle, Text, Group } from 'react-konva';
 import Box from '@mui/material/Box';
@@ -500,7 +500,7 @@ export function Upload() {
               <QRCode value={`https://your-domain.com/verify/${serialNumber}`} size={150} />
             </Box>
           )}
-          
+
         </Stack>
       </Box>
 

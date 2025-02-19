@@ -19,7 +19,7 @@ class DocumentUploadView(APIView):
     def post(self, request):
         serializer = DocumentSerializer(data=request.data)
         if serializer.is_valid():
-           document = serializer.save(user=request.user)
+            document = serializer.save(user=request.user)
             return Response({
                 "message": "Document uploaded successfully!",
                 "serial_number": document.serial_number,
