@@ -75,7 +75,7 @@ class Document(models.Model):
         if not self.serial_number:
             self.generate_serial_number()
 
-        verification_url = f"https://your-domain.com/verify/{self.serial_number}"
+        verification_url = f"https://127.0.0.1/verify/{self.serial_number}"
         qr = qrcode.make(verification_url)
 
         buffer = BytesIO()

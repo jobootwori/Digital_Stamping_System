@@ -16,8 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from stamps.views import RegisterView, UserDetailView, DocumentUploadView, DocumentSaveView, DocumentListView, StampListView, StampCreateView
+from stamps.views import RegisterView, UserDetailView, DocumentUploadView, DocumentSaveView, DocumentListView, StampListView, StampCreateView, GenerateSerialNumberView
 from django.views.generic import RedirectView
+
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('me/', UserDetailView.as_view(), name='user-detail'),
     path('upload/', DocumentUploadView.as_view(), name='document-upload'),
+    path('generate-serial/', GenerateSerialNumberView.as_view(), name='generate-serial'),
     path('stamps/', StampListView.as_view(), name='stamp-list'),
     path('stamps/create/', StampCreateView.as_view(), name='stamp-create'),
     path('document/save/', DocumentSaveView.as_view(), name='document-save'),

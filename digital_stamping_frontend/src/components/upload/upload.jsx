@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { QRCode } from 'qrcode.react';
 import React, { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Image as KonvaImage, Rect, Circle, Text, Group } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Rect, Circle, Text, Group, Transformer } from 'react-konva';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -36,8 +36,20 @@ export function Upload() {
   const [stampColor, setStampColor] = useState('#ff0000');
   const [stampText, setStampText] = useState('My Stamp');
   const [fileType, setFileType] = useState('');
-  const [serialNumber, setSerialNumber] = useState('');
+
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [qrCode, setQrCode] = useState(null);
+  const [qrPosition, setQrPosition] = useState({ x: 200, y: 200 });
+  const [qrSize, setQrSize] = useState(100);
+  const [selectedQr, setSelectedQr] = useState(false);
+  const qrRef = useRef();
+  const transformerRef = useRef();
+
+  // New state for serial number positioning
+  const [serialPosition, setSerialPosition] = useState({ x: 250, y: 500 });
+  const [selectedSerial, setSelectedSerial] = useState(false);
+  const serialRef = useRef();
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -57,6 +69,110 @@ export function Upload() {
     };
     reader.readAsDataURL(file);
   };
+
+  // Function to add a QR Code and Serial Number
+  const addQrCode = async () => {
+    try {
+      const response = await axios.get(`${SERVER_URL}/generate-serial/`);
+      if (response.status === 200) {
+        setSerialNumber(response.data.serial_number);
+        setQrCode(`https://127.0.0.1/verify/${response.data.serial_number}`);
+      } else {
+        console.error('Failed to generate serial number');
+      }
+    } catch (error) {
+      console.error('Error generating serial number:', error);
+    }
+  };
+
+  // Handle QR Code Drag
+  const handleQrDragEnd = (e) => {
+    setQrPosition({ x: e.target.x(), y: e.target.y() });
+  };
+
+  // Handle Serial Number Drag
+  const handleSerialDragEnd = (e) => {
+    setSerialPosition({ x: e.target.x(), y: e.target.y() });
+  };
+
+  // Render the QR Code on Canvas
+  const renderQrCode = () => {
+    if (!qrCode) return null;
+
+    return (
+      <Group
+        draggable
+        x={qrPosition.x}
+        y={qrPosition.y}
+        onClick={() => setSelectedQr(true)}
+        onDragEnd={handleQrDragEnd}
+        ref={qrRef}
+      >
+        <Rect width={qrSize} height={qrSize} fill="white" shadowBlur={5} />
+        <QRCode value={qrCode} size={qrSize} />
+        {selectedQr && <Transformer ref={transformerRef} />}
+      </Group>
+    );
+  };
+
+  // Render Serial Number as Draggable Text
+  const renderSerialNumber = () => {
+    if (!serialNumber) return null;
+
+    return (
+      <Text
+        ref={serialRef}
+        text={`Serial: ${serialNumber}`}
+        fontSize={18}
+        fontStyle="bold"
+        fill="red"
+        x={serialPosition.x}
+        y={serialPosition.y}
+        draggable
+        onClick={() => setSelectedSerial(true)}
+        onDragEnd={handleSerialDragEnd}
+      />
+    );
+  };
+
+  // const saveCanvasToDatabase = async () => {
+  //   try {
+  //     const token = localStorage.getItem('accessToken');
+  //     if (!token) {
+  //       alert('User not logged in.');
+  //       return;
+  //     }
+
+  //     const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+  //     const file = new Blob([uri], { type: 'image/png' });
+
+  //     const formData = new FormData();
+  //     formData.append('file', file, 'stamped-document.png');
+  //     formData.append('serial_number', serialNumber);
+  //     formData.append('qr_code', qrCode);
+  //     formData.append('qr_x', qrPosition.x);
+  //     formData.append('qr_y', qrPosition.y);
+  //     formData.append('qr_size', qrSize);
+  //     formData.append('serial_x', serialPosition.x);
+  //     formData.append('serial_y', serialPosition.y);
+
+  //     const response = await axios.post(`${SERVER_URL}/document/save/`, formData, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data',
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     if (response.status === 201) {
+  //       alert('Document saved successfully!');
+  //     } else {
+  //       alert('Failed to save document.');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error saving document:', error);
+  //     alert('An error occurred while saving the document.');
+  //   }
+  // };
 
   const loadPdf = async (pdfData) => {
     const loadedPdf = await pdfjsLib.getDocument(pdfData).promise;
@@ -311,6 +427,13 @@ export function Upload() {
       const formData = new FormData();
       // const filename = fileType === 'image' ? 'stamped-document.png' : 'stamped-document.pdf';
       formData.append('file', file, filename);
+      formData.append('serial_number', serialNumber);
+      formData.append('qr_code', qrCode);
+      formData.append('qr_x', qrPosition.x);
+      formData.append('qr_y', qrPosition.y);
+      formData.append('qr_size', qrSize);
+      formData.append('serial_x', serialPosition.x);
+      formData.append('serial_y', serialPosition.y);
 
       console.log('Sending FormData:', formData);
 
@@ -371,9 +494,20 @@ export function Upload() {
             <KonvaImage key={index} image={img} width={800} height={600} />
           ))}
           {renderStamps()}
+          {renderQrCode()}
+          {renderSerialNumber()}
         </Layer>
       </Stage>
 
+      
+
+      {/* QR Code & Serial Number Display */}
+      {serialNumber && (
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="h6">Serial Number: {serialNumber}</Typography>
+          <QRCode value={qrCode} size={150} />
+        </Box>
+      )}
       {/* Zoom Slider */}
       <Box sx={{ mt: 2 }}>
         <Typography variant="subtitle1">Zoom</Typography>
@@ -500,11 +634,17 @@ export function Upload() {
               <QRCode value={`https://your-domain.com/verify/${serialNumber}`} size={150} />
             </Box>
           )}
-
         </Stack>
       </Box>
 
       <Stack direction="row" spacing={2} sx={{ mt: 2, justifyContent: 'center' }}>
+        {/* Buttons to add QR Code & Serial Number */}
+    {/* <Stack direction="row" spacing={2} sx={{ mt: 3, justifyContent: 'center' }}> */}
+        <Button variant="contained" onClick={addQrCode}>
+          Add QR Code & Serial
+        </Button>
+     
+        
         <Button variant="contained" onClick={downloadCanvasAsImage}>
           Download as Image
         </Button>
@@ -516,5 +656,6 @@ export function Upload() {
         </Button>
       </Stack>
     </Box>
+    
   );
 }

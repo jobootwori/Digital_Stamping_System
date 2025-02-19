@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -12,6 +13,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 
 
+class GenerateSerialNumberView(APIView):
+    permission_classes = [IsAuthenticated]  # Restrict access to authenticated users
+
+    def get(self, request):
+        """Generate a new serial number and return it to the frontend."""
+        document = Document()
+        document.generate_serial_number()
+        return Response({"serial_number": document.serial_number})
 
 class DocumentUploadView(APIView):
     permission_classes = [IsAuthenticated]
