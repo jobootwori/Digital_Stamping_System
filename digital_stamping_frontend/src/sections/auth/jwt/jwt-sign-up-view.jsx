@@ -104,6 +104,9 @@ export function JwtSignUpView() {
         // Store email in local storage for OTP verification
         localStorage.setItem('userEmail', data.email);
 
+        // **Trigger OTP generation**
+        await axios.post(`${SERVER_URL}/generate-otp/`, { email: data.email });
+
         setSignupSuccess(true);
         setVerificationMessage(
           'An OTP Code has been sent to your email. Please verify your email before logging in.'

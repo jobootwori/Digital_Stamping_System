@@ -2,6 +2,9 @@
 
 # Create your models here.
 import qrcode
+import random
+from django.utils.timezone import now
+from datetime import timedelta
 from io import BytesIO
 from django.core.files.base import ContentFile
 import uuid
@@ -60,7 +63,7 @@ class CustomUser(AbstractUser):
     def is_otp_valid(self, entered_otp):
         """Check if OTP is valid and not expired."""
         return self.otp == entered_otp and self.otp_expiry > now()
-        
+
     objects = CustomUserManager()
 
     

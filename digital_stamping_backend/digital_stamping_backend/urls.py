@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from stamps.views import RegisterView, UserDetailView, DocumentUploadView, DocumentSaveView, DocumentListView, StampListView, StampCreateView, GenerateSerialNumberView, VerifySerialNumberView
+from stamps.views import RegisterView, UserDetailView, DocumentUploadView, DocumentSaveView, DocumentListView, StampListView, StampCreateView, GenerateSerialNumberView, VerifySerialNumberView, GenerateOTPView, VerifyOTPView
 from django.views.generic import RedirectView
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView

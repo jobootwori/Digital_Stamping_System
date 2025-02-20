@@ -20,7 +20,7 @@ export function OTPVerification({ onSuccess }) {
       }
 
       const response = await axios.post(
-        `${SERVER_URL}/api/auth/verify-otp`,
+        `${SERVER_URL}/verify-otp/`,
         { email, otp },
         // { otp_verified: true },
         { headers: { 'Content-Type': 'application/json' } }
