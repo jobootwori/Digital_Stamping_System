@@ -54,6 +54,27 @@ class DocumentListView(APIView):
         serializer = DocumentSerializer(documents, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class VerifySerialNumberView(APIView):
+    permission_classes = [AllowAny]  # Public endpoint
+
+    def get(self, request, serial_number):
+        """Verify a document using its serial number."""
+        try:
+            document = Document.objects.get(serial_number=serial_number)
+            return Response({
+                "valid": True,
+                "message": "Document is valid.",
+                "serial_number": document.serial_number,
+                "created_at": document.created_at,
+                "owner": document.user.email if document.user else "Anonymous",
+            })
+        except Document.DoesNotExist:
+            return Response({
+                "valid": False,
+                "message": "Invalid serial number. Document not found."
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
 class StampCreateView(APIView):
     permission_classes = [IsAuthenticated]
 

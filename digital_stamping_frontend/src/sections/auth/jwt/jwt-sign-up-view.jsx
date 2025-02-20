@@ -25,6 +25,8 @@ import { Form, Field } from 'src/components/hook-form';
 
 import { signUp } from 'src/auth/context/jwt';
 
+import { OTPVerification } from 'src/sections/auth/jwt/otp-verification-view';
+
 import { useAuthContext } from 'src/auth/hooks';
 const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -64,6 +66,8 @@ export function JwtSignUpView() {
 
   const [signupSuccess, setSignupSuccess] = useState(false);
 
+  const [verificationMessage, setVerificationMessage] = useState('');
+
   const defaultValues = {
     first_name: '',
     last_name: '',
@@ -92,16 +96,27 @@ export function JwtSignUpView() {
           password2: data.confirmPassword,
           first_name: data.first_name,
           last_name: data.last_name,
-
         },
         { 'Content-Type': 'application/json' }
       );
-      
-      await checkUserSession?.();
-      setSignupSuccess(true); // Set success state to true
 
-      router.push(paths.auth.jwt.signIn); // Redirect to sign in page after successful registration
-      
+      if (response.data.message === 'User created successfully!') {
+        // Store email in local storage for OTP verification
+        localStorage.setItem('userEmail', data.email);
+
+        setSignupSuccess(true);
+        setVerificationMessage(
+          'An OTP Code has been sent to your email. Please verify your email before logging in.'
+        );
+
+        // Redirect user to the OTP verification page
+        // router.push("/auth/verify-otp");
+      }
+
+      // await checkUserSession?.();
+      // setSignupSuccess(true); // Set success state to true
+
+      // router.push(paths.auth.jwt.signIn); // Redirect to sign in page after successful registration
     } catch (error) {
       console.error(error);
       if (error.response && error.response.data) {
@@ -211,7 +226,13 @@ export function JwtSignUpView() {
     <Alert severity="info" sx={{ mb: 3 }}>
       Sign up successful
     </Alert>
-    );
+  );
+
+  const renderVerificationMessage = verificationMessage && (
+    <Alert severity="info" sx={{ mb: 3 }}>
+      {verificationMessage}
+    </Alert>
+  );
 
   const renderTerms = (
     <Typography
@@ -239,8 +260,6 @@ export function JwtSignUpView() {
     <>
       {renderHead}
 
-      
-
       {!!errorMsg && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {errorMsg}
@@ -249,9 +268,23 @@ export function JwtSignUpView() {
 
       {renderSuccess}
 
-      <Form methods={methods} onSubmit={onSubmit}>
-        {renderForm}
-      </Form>
+      {renderVerificationMessage}
+
+      {!signupSuccess ? (
+        <Form methods={methods} onSubmit={onSubmit}>
+          {renderForm}
+        </Form>
+      ) : (
+        <OTPVerification onSuccess={() => router.push(paths.auth.jwt.signIn)} />
+      )}
+
+      {/* {signupSuccess ? (
+        <OTPVerification onSuccess={() => router.push(paths.auth.jwt.signIn)} />
+      ) : (
+        <Form methods={methods} onSubmit={onSubmit}>
+          {renderForm}
+        </Form>
+      )} */}
 
       {renderTerms}
     </>
