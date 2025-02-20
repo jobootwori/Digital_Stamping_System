@@ -45,12 +45,25 @@ class CustomUser(AbstractUser):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     username = None
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    otp_expiry = models.DateTimeField(blank=True, null=True)
 
     USERNAME_FIELD = 'email' # Use email as the username field
     REQUIRED_FIELDS = ['first_name', 'last_name']  # Do not include 'email' here
 
+    def generate_otp(self):
+        """Generate a 6-digit OTP and set an expiry time."""
+        self.otp = str(random.randint(100000, 999999))
+        self.otp_expiry = now() + timedelta(minutes=10)  # OTP expires in 10 mins
+        self.save()
+
+    def is_otp_valid(self, entered_otp):
+        """Check if OTP is valid and not expired."""
+        return self.otp == entered_otp and self.otp_expiry > now()
+        
     objects = CustomUserManager()
 
+    
     def __str__(self):
         return self.email
 

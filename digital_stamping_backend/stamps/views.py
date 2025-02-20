@@ -9,9 +9,70 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Document, Stamp
 from .serializers import DocumentSerializer, StampSerializer, RegisterSerializer, UserSerializer, LoginSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.core.mail import send_mail
+from django.utils.timezone import now
 
 from django.contrib.auth import get_user_model
 
+User = get_user_model()
+
+from django.core.mail import send_mail
+from django.utils.timezone import now
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from rest_framework import status
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class GenerateOTPView(APIView):
+    permission_classes = [AllowAny]  # Allow public access
+
+    def post(self, request):
+        email = request.data.get("email")
+        if not email:
+            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+            user.generate_otp()  # Generate OTP and set expiry
+
+            # Send OTP via email
+            send_mail(
+                "Your OTP Code",
+                f"Your OTP code is {user.otp}. It expires in 10 minutes.",
+                "your-email@gmail.com",  # Sender email
+                [user.email],
+                fail_silently=False,
+            )
+
+            return Response({"message": "OTP sent successfully"}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class VerifyOTPView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        otp = request.data.get("otp")
+
+        if not email or not otp:
+            return Response({"error": "Email and OTP are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+            if user.is_otp_valid(otp):
+                user.otp = None  # Clear OTP after verification
+                user.otp_expiry = None
+                user.is_active = True  # Activate account
+                user.save()
+                return Response({"message": "OTP verified successfully"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
 class GenerateSerialNumberView(APIView):
     permission_classes = [IsAuthenticated]  # Restrict access to authenticated users

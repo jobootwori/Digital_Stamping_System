@@ -24,6 +24,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('register/', RegisterView.as_view(), name='register'),
+    path("generate-otp/", GenerateOTPView.as_view(), name="generate-otp"),
+    path("verify-otp/", VerifyOTPView.as_view(), name="verify-otp"),
     path('me/', UserDetailView.as_view(), name='user-detail'),
     path('upload/', DocumentUploadView.as_view(), name='document-upload'),
     path('generate-serial/', GenerateSerialNumberView.as_view(), name='generate-serial'),
